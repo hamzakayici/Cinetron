@@ -19,4 +19,10 @@ export class AuthController {
         }
         return this.authService.login(user);
     }
+
+    @Post('emergency-reset')
+    @ApiOperation({ summary: 'Emergency Reset Admin Password' })
+    async emergencyReset() {
+        return this.authService.emergencyReset();
+    }
 }
