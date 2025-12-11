@@ -55,9 +55,9 @@ const Setup = () => {
                     <motion.div
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 shadow-lg shadow-primary-900/50 mb-6"
+                        className="inline-flex items-center justify-center mb-6"
                     >
-                        <span className="text-3xl font-bold">C</span>
+                        <img src="/logo.png" alt="Cinetron" className="h-24 w-auto" />
                     </motion.div>
                     <h1 className="text-4xl font-bold tracking-tight mb-2">{t('welcome.title')}</h1>
                     <p className="text-white/40">{t('welcome.subtitle')}</p>

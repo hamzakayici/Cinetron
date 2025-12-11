@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutGrid, Settings, LogOut, Film } from 'lucide-react';
+import { LayoutGrid, Settings, LogOut } from 'lucide-react';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
@@ -17,11 +17,13 @@ const Layout = () => {
         <div className="flex h-screen bg-background text-white selection:bg-primary-500/30">
             {/* Minimalist Glass Sidebar */}
             <aside className="w-24 group hover:w-64 transition-[width] duration-500 ease-in-out border-r border-white/5 bg-black/20 backdrop-blur-xl flex flex-col z-50 fixed inset-y-0 left-0">
-                <div className="p-6 flex items-center gap-4 overflow-hidden whitespace-nowrap">
-                    <div className="h-10 w-10 shrink-0 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg shadow-primary-900/50">
-                        <Film className="h-6 w-6 text-white" />
-                    </div>
-                    <h1 className="text-xl font-bold tracking-tight opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="p-6 flex items-center justify-center gap-4 overflow-hidden whitespace-nowrap">
+                    <img
+                        src="/logo.png"
+                        alt="Cinetron Logo"
+                        className="h-10 w-auto object-contain transition-all duration-300"
+                    />
+                    <h1 className="text-xl font-bold tracking-tight opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden">
                         Cinetron
                     </h1>
                 </div>

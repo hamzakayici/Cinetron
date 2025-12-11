@@ -43,14 +43,15 @@ const Login = () => {
                 className="relative z-10 w-full max-w-md p-8"
             >
                 <div className="mb-10 text-center">
-                    <motion.h1
+                    <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="bg-gradient-to-r from-white to-white/60 bg-clip-text text-5xl font-bold tracking-tighter text-transparent"
+                        className="flex justify-center mb-6"
                     >
-                        Cinetron
-                    </motion.h1>
+                        <img src="/logo.png" alt="Cinetron" className="h-24 w-auto drop-shadow-2xl" />
+                    </motion.div>
+                    <h1 className="sr-only">Cinetron</h1>
                     <motion.p
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -112,11 +113,11 @@ const Login = () => {
                         </p>
                     </div>
                 </div>
-            </motion.div>
+            </motion.div >
 
             {/* Bottom Gradient */}
-            <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent" />
-        </div>
+            < div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent" />
+        </div >
     );
 };
 

@@ -13,8 +13,8 @@ const Admin = () => {
         setResult(null);
         setError(null);
         try {
-            const res = await scanLibrary();
-            setResult(res);
+            const res = await scanLibrary() as any; // Cast to any to handle new fields
+            setResult({ message: res.message, added: res.added });
         } catch (err) {
             setError("Scan failed. Check console or server logs.");
         } finally {
@@ -44,14 +44,16 @@ const Admin = () => {
                     </button>
 
                     {result && (
-                        <motion.div
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            className="flex items-center gap-2 text-green-400 bg-green-400/10 px-3 py-2 rounded-lg"
-                        >
-                            <CheckCircle size={18} />
-                            <span>{result.message} ({result.added} new items)</span>
-                        </motion.div>
+                        <div className="flex flex-col gap-2">
+                            <motion.div
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                className="flex items-center gap-2 text-green-400 bg-green-400/10 px-3 py-2 rounded-lg border border-green-400/20"
+                            >
+                                <CheckCircle size={18} />
+                                <span className="font-mono text-sm">{result.message}</span>
+                            </motion.div>
+                        </div>
                     )}
 
                     {error && (

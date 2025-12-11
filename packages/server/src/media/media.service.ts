@@ -184,7 +184,7 @@ export class MediaService implements OnModuleInit {
         this.logger.log('Mock data seeding complete.');
     }
 
-    async scanDirectory(): Promise<{ message: string, added: number }> {
+    async scanDirectory(): Promise<{ message: string, added: number, details?: any }> {
         let addedCount = 0;
         let messages = [];
 
@@ -217,62 +217,48 @@ export class MediaService implements OnModuleInit {
         }
 
         // 2. Scan MinIO Bucket
+        let minioStats = { found: 0, added: 0 };
         if (this.minioClient) {
             try {
-                const minioAdded = await this.scanMinio();
-                addedCount += minioAdded;
-                messages.push(`MinIO scan complete (${minioAdded} added)`);
+                minioStats = await this.scanMinio();
+                addedCount += minioStats.added;
+                messages.push(`MinIO: Found ${minioStats.found}, Added ${minioStats.added}`);
             } catch (err) {
                 this.logger.error('MinIO scan failed', err);
-                messages.push('MinIO scan failed');
+                messages.push(`MinIO scan failed: ${err.message}`);
             }
+        } else {
+            messages.push('MinIO client not verified');
         }
 
-        return { message: messages.join(', '), added: addedCount };
+        return { message: messages.join(' | '), added: addedCount, details: minioStats };
     }
 
-    private async scanMinio(): Promise<number> {
+    private async scanMinio(): Promise<{ found: number, added: number }> {
         return new Promise((resolve, reject) => {
             if (!this.minioClient) {
-                this.logger.warn('MinIO client not initialized');
-                return resolve(0);
+                return resolve({ found: 0, added: 0 });
             }
 
             const bucket = this.minioBucket;
-            this.logger.log(`Starting MinIO scan for bucket: ${bucket}`);
-
-            // Re-implementing with async iterator for better control if minio supports it, 
-            // otherwise collect list.
             const objects: any[] = [];
-
             const listStream = this.minioClient.listObjects(bucket, '', true);
 
-            listStream.on('data', (obj) => {
-                // this.logger.debug(`Found MinIO object: ${JSON.stringify(obj)}`);
-                objects.push(obj);
-            });
-
-            listStream.on('error', (err) => {
-                this.logger.error(`Error listing objects in bucket ${bucket}`, err);
-                reject(err);
-            });
+            listStream.on('data', (obj) => objects.push(obj));
+            listStream.on('error', (err) => reject(err));
 
             listStream.on('end', async () => {
-                this.logger.log(`MinIO list complete. Found ${objects.length} objects.`);
                 let added = 0;
+                let found = 0;
+
                 for (const obj of objects) {
-                    const name = obj.name || obj.key; // Try both standard properties
-                    if (!name) {
-                        this.logger.warn(`Skipping object with no name: ${JSON.stringify(obj)}`);
-                        continue;
-                    }
+                    const name = obj.name || obj.key;
+                    if (!name) continue;
 
                     const ext = path.extname(name).toLowerCase();
-                    if (!VIDEO_EXTENSIONS.includes(ext)) {
-                        // this.logger.debug(`Skipping non-video file: ${name}`);
-                        continue;
-                    }
+                    if (!VIDEO_EXTENSIONS.includes(ext)) continue;
 
+                    found++;
                     const filePath = `minio:${bucket}:${name}`;
                     const exists = await this.mediaRepository.findOne({ where: { filePath } });
 
@@ -287,10 +273,9 @@ export class MediaService implements OnModuleInit {
                         });
                         await this.mediaRepository.save(newMedia);
                         added++;
-                        this.logger.log(`Added MinIO media: ${title}`);
                     }
                 }
-                resolve(added);
+                resolve({ found, added });
             });
         });
     }

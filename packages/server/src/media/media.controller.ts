@@ -23,7 +23,7 @@ export class MediaController {
 
     @Post('scan')
     @ApiOperation({ summary: 'Trigger directory scan for new media' })
-    scanLibrary(): Promise<{ message: string, added: number }> {
+    scanLibrary(): Promise<{ message: string, added: number, details?: any }> {
         return this.mediaService.scanDirectory();
     }
 }
