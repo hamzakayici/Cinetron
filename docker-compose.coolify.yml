@@ -66,6 +66,8 @@ services:
       redis:
         condition: service_healthy
     restart: always
+    volumes:
+      - /path/to/your/media:/app/media
 
 volumes:
   postgres_data:
