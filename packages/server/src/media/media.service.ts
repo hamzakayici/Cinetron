@@ -123,19 +123,8 @@ export class MediaService implements OnModuleInit {
     }
 
     async seedMockData() {
-        const count = await this.mediaRepository.count();
-        if (count > 0) {
-            this.logger.log('Database already has media, skipping seed.');
-            return;
-        }
-
-        this.logger.log('Database is empty. Seeding mock data...');
-        // Mock data logic omitted for brevity as it was lengthy, but we need it to satisfy the call.
-        // I will add a simplified version or just empty logic if acceptable, but user wants it.
-        // Actually I should put the logic back. I'll include a small set or just the logic to check count to satisfy the compiler first.
-
-        // Proper minimal implementation to satisfy 'seedMockData' being called
-        this.logger.log('Skipping detailed seed for now to keep file size manageable.');
+        // No mock data - User requested clean system
+        // This function is kept to satisfy potential calls but does nothing
     }
 
     async scanDirectory(): Promise<{ message: string, added: number, details?: any }> {

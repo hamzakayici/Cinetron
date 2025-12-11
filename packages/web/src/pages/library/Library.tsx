@@ -5,13 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getMedia, type Media } from '../../services/media';
 
-const HERO_MOVIE = {
-    title: "Dune: Part Two",
-    description: "Paul Atreides unites with Chani and the Fremen while on a warpath of revenge against the conspirators who destroyed his family.",
-    backdrop: "https://image.tmdb.org/t/p/original/xOMo8BRK7PfcJv9JCnx7s5hj0PX.jpg",
-    logo: "DUNE LOGO"
-};
-
 const Library = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
@@ -31,12 +24,23 @@ const Library = () => {
     }, []);
 
     const categories = [
-        { title: t('library.continueWatching'), aspect: "video", items: [] }, // Placeholder
-        { title: t('library.recentlyAdded'), aspect: "poster", items: mediaItems }, // Real Data
-        { title: t('library.scifi'), aspect: "poster", items: [] }, // Placeholder
+        { title: t('library.continueWatching'), aspect: "video", items: [] },
+        { title: t('library.recentlyAdded'), aspect: "poster", items: mediaItems },
     ];
 
-    const heroItem = (mediaItems.length > 0 ? mediaItems[0] : HERO_MOVIE) as any;
+    // If no media, show a generic welcome or nothing
+    if (mediaItems.length === 0) {
+        return (
+            <div className="flex h-screen items-center justify-center bg-black text-white">
+                <div className="text-center">
+                    <h1 className="text-4xl font-bold mb-4">Welcome to Cinetron</h1>
+                    <p className="text-lg opacity-60">No media found. Go to Admin Settings to scan your library.</p>
+                </div>
+            </div>
+        );
+    }
+
+    const heroItem = mediaItems[0]; // First item as Hero
 
     return (
         <div className="pb-20">
@@ -44,7 +48,7 @@ const Library = () => {
             <div className="relative h-[60vh] md:h-[80vh] w-full overflow-hidden">
                 <div className="absolute inset-0">
                     <img
-                        src={heroItem.backdropUrl || heroItem.backdrop || HERO_MOVIE.backdrop}
+                        src={heroItem.backdropUrl || heroItem.posterUrl}
                         alt="Hero Backdrop"
                         className="h-full w-full object-cover object-top opacity-60"
                     />
@@ -66,7 +70,7 @@ const Library = () => {
                         transition={{ delay: 0.2 }}
                         className="mb-6 md:mb-8 line-clamp-3 md:line-clamp-none max-w-2xl text-sm md:text-lg font-medium text-white/80 drop-shadow-md"
                     >
-                        {heroItem.overview || HERO_MOVIE.description}
+                        {heroItem.overview}
                     </motion.p>
 
                     <motion.div
@@ -76,14 +80,14 @@ const Library = () => {
                         className="flex items-center gap-4"
                     >
                         <button
-                            onClick={() => heroItem && heroItem.id ? navigate(`/watch/${heroItem.id}`) : alert(t('library.noMedia'))}
+                            onClick={() => navigate(`/watch/${heroItem.id}`)}
                             className="flex items-center gap-2 md:gap-3 rounded-lg bg-white px-6 md:px-8 py-2 md:py-3 font-bold text-black hover:bg-white/90 transition-colors text-sm md:text-base"
                         >
                             <Play fill="currentColor" size={20} className="md:w-6 md:h-6" />
                             {t('library.play')}
                         </button>
                         <button
-                            onClick={() => alert(heroItem.overview || heroItem.description || HERO_MOVIE.description)}
+                            onClick={() => navigate(`/title/${heroItem.id}`)}
                             className="flex items-center gap-2 md:gap-3 rounded-lg bg-white/20 px-6 md:px-8 py-2 md:py-3 font-bold text-white backdrop-blur-md hover:bg-white/30 transition-colors text-sm md:text-base"
                         >
                             <Info size={20} className="md:w-6 md:h-6" />
