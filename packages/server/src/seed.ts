@@ -8,11 +8,12 @@ async function bootstrap() {
     const app = await NestFactory.createApplicationContext(AppModule);
     const usersService = app.get(UsersService);
 
-    const adminEmail = 'admin@cinetron.local';
+    const adminEmail = 'admin@cinetron.com';
+    const adminPassword = 'admin123';
     const existingAdmin = await usersService.findOne(adminEmail);
 
     if (!existingAdmin) {
-        const passwordHash = await bcrypt.hash('ChangeMe123!', 10);
+        const passwordHash = await bcrypt.hash(adminPassword, 10);
         await usersService.create({
             email: adminEmail,
             passwordHash,
