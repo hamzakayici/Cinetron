@@ -1,6 +1,8 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { Media } from './media.entity';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -22,6 +24,7 @@ export class MediaService implements OnModuleInit {
     constructor(
         @InjectRepository(Media)
         private mediaRepository: Repository<Media>,
+        @InjectQueue('metadata-queue') private metadataQueue: Queue,
     ) {
         this.initializeMinio();
     }
@@ -195,7 +198,16 @@ export class MediaService implements OnModuleInit {
                             posterUrl: `https://placehold.co/400x600/1a1a1a/ffffff?text=${encodeURIComponent(title)}`,
                             overview: `Auto-detected from MinIO: ${fileName}`, processed: true
                         });
-                        await this.mediaRepository.save(newMedia);
+                        const savedMedia = await this.mediaRepository.save(newMedia);
+
+                        // Dispatch metadata job
+                        await this.metadataQueue.add('fetch-metadata', {
+                            mediaId: savedMedia.id,
+                            filename: name,
+                            filePath: filePath,
+                        });
+                        this.logger.log(`Dispatched metadata job for: ${name}`);
+
                         added++;
                     }
                 }

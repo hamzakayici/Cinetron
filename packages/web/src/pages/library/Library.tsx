@@ -1,4 +1,4 @@
-import { Play, Info, Plus } from 'lucide-react';
+import { Play, Info } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -109,7 +109,7 @@ const Library = () => {
                                 {category.items.map((item, i) => (
                                     <div
                                         key={item.id || i}
-                                        onClick={() => navigate(`/watch/${item.id}`)}
+                                        onClick={() => navigate(`/title/${item.id}`)}
                                         className={`relative flex-none snap-start overflow-hidden rounded-lg bg-surface transition-all duration-300 hover:z-30 hover:scale-105 hover:ring-2 hover:ring-primary-500 cursor-pointer group ${category.aspect === 'video' ? 'w-80 aspect-video' : 'w-48 aspect-[2/3]'}`}
                                     >
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex flex-col justify-end p-4">
@@ -127,11 +127,11 @@ const Library = () => {
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        alert(`Added ${item.title} to My List`);
+                                                        navigate(`/title/${item.id}`);
                                                     }}
                                                     className="rounded-full border border-white/30 p-2 text-white hover:border-white hover:bg-white/10 transition-colors"
                                                 >
-                                                    <Plus size={12} />
+                                                    <Info size={12} />
                                                 </button>
                                             </div>
                                         </div>

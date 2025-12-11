@@ -6,6 +6,7 @@ import Library from './pages/library/Library';
 import Admin from './pages/admin/Admin';
 import Setup from './pages/setup/Setup';
 import Player from './pages/player/Player';
+import MediaDetail from './pages/detail/MediaDetail';
 import api from './services/api';
 import { Loader2 } from 'lucide-react';
 
@@ -58,6 +59,7 @@ const App = () => {
           <Route path="/setup" element={<Setup />} />
           <Route path="/login" element={<Login />} />
           <Route path="/watch/:id" element={<Player />} />
+          <Route path="/title/:id" element={<MediaDetail />} />
 
           <Route element={<Layout />}>
             {/* Protected Routes */}

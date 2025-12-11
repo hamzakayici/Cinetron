@@ -25,6 +25,20 @@ export const getMedia = async (): Promise<Media[]> => {
     return res.json();
 };
 
+export const getMediaById = async (id: string): Promise<Media> => {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('No token found');
+
+    const res = await fetch(`${API_URL}/api/media/${id}`, {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    });
+
+    if (!res.ok) throw new Error('Failed to fetch media detail');
+    return res.json();
+};
+
 export const scanLibrary = async (): Promise<{ message: string, added: number }> => {
     const token = localStorage.getItem('token');
     const res = await fetch(`${API_URL}/api/media/scan`, {
