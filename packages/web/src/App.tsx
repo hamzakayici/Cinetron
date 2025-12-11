@@ -7,6 +7,11 @@ import Admin from './pages/admin/Admin';
 import Setup from './pages/setup/Setup';
 import Player from './pages/player/Player';
 import MediaDetail from './pages/detail/MediaDetail';
+import SearchPage from './pages/search/SearchPage';
+import Movies from './pages/movies/Movies';
+import Series from './pages/series/Series';
+import MyList from './pages/mylist/MyList';
+import HistoryPage from './pages/history/HistoryPage';
 import api from './services/api';
 import { Loader2 } from 'lucide-react';
 
@@ -64,6 +69,11 @@ const App = () => {
           <Route element={<Layout />}>
             {/* Protected Routes */}
             <Route path="/library" element={<Library />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/movies" element={<Movies />} />
+            <Route path="/series" element={<Series />} />
+            <Route path="/list" element={<MyList />} />
+            <Route path="/history" element={<HistoryPage />} />
             <Route path="/admin" element={<Admin />} />
 
             {/* Default redirect */}
