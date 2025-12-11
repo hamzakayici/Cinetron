@@ -28,6 +28,7 @@ RUN apk add --no-cache ffmpeg nginx supervisor curl
 WORKDIR /app
 
 # Copy built artifacts from Node builder
+COPY --from=node-builder /app/node_modules /app/node_modules
 COPY --from=node-builder /app/packages/server/dist /app/packages/server/dist
 COPY --from=node-builder /app/packages/server/node_modules /app/packages/server/node_modules
 COPY --from=node-builder /app/packages/workers/dist /app/packages/workers/dist
