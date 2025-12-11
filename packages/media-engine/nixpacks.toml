@@ -1,0 +1,8 @@
+[phases.setup]
+nixPkgs = ["go", "ffmpeg"]
+
+[phases.build]
+cmds = ["go build -o media-engine ./cmd/server"]
+
+[start]
+cmd = "./media-engine"
