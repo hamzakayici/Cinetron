@@ -1,6 +1,7 @@
 import { Play, Info, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { getMedia, type Media } from '../../services/media';
 
 const HERO_MOVIE = {
@@ -11,6 +12,7 @@ const HERO_MOVIE = {
 };
 
 const Library = () => {
+    const { t } = useTranslation();
     const [mediaItems, setMediaItems] = useState<Media[]>([]);
 
     useEffect(() => {
@@ -27,9 +29,9 @@ const Library = () => {
     }, []);
 
     const categories = [
-        { title: "Continue Watching", aspect: "video", items: [] }, // Placeholder
-        { title: "Recently Added", aspect: "poster", items: mediaItems }, // Real Data
-        { title: "Sci-Fi & Fantasy", aspect: "poster", items: [] }, // Placeholder
+        { title: t('library.continueWatching'), aspect: "video", items: [] }, // Placeholder
+        { title: t('library.recentlyAdded'), aspect: "poster", items: mediaItems }, // Real Data
+        { title: t('library.scifi'), aspect: "poster", items: [] }, // Placeholder
     ];
 
     return (
@@ -74,14 +76,14 @@ const Library = () => {
                             className="flex items-center gap-3 rounded-lg bg-white px-8 py-3 font-bold text-black hover:bg-white/90 transition-colors"
                         >
                             <Play fill="currentColor" size={24} />
-                            Play
+                            {t('library.play')}
                         </button>
                         <button
                             onClick={() => alert(HERO_MOVIE.description)}
                             className="flex items-center gap-3 rounded-lg bg-white/20 px-8 py-3 font-bold text-white backdrop-blur-md hover:bg-white/30 transition-colors"
                         >
                             <Info size={24} />
-                            More Info
+                            {t('library.moreInfo')}
                         </button>
                     </motion.div>
                 </div>
