@@ -45,11 +45,10 @@ services:
       retries: 3
     restart: always
 
-  server:
+  cinetron:
     build:
       context: .
-      dockerfile: Dockerfile
-      target: server
+      dockerfile: deployment/aio/Dockerfile
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
@@ -59,53 +58,13 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       JWT_SECRET: ${JWT_SECRET:-secretKey}
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    ports:
-      - "3000:3000"
-    restart: always
-
-  workers:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: workers
-    environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_USER: ${POSTGRES_USER:-cinetron}
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-cinetron_password}
-      DB_NAME: ${POSTGRES_DB:-cinetron_db}
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    restart: always
-
-  media-engine:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: media-engine
-    environment:
-      REDIS_HOST: redis:6379
-    depends_on:
-      redis:
-        condition: service_healthy
-    restart: always
-
-  web:
-    build:
-      context: .
-      dockerfile: packages/web/Dockerfile
     ports:
       - "80:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: always
 
 volumes:
