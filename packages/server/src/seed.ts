@@ -12,9 +12,9 @@ async function bootstrap() {
     const adminEmail = 'admin@cinetron.com';
     const adminPassword = 'admin123';
     const existingAdmin = await usersService.findOne(adminEmail);
+    const passwordHash = await bcrypt.hash(adminPassword, 10);
 
     if (!existingAdmin) {
-        const passwordHash = await bcrypt.hash(adminPassword, 10);
         await usersService.create({
             email: adminEmail,
             passwordHash,
@@ -24,7 +24,9 @@ async function bootstrap() {
         });
         console.log('Admin user created');
     } else {
-        console.log('Admin user already exists');
+        // Force update password to ensure access in case of mismatch
+        await usersService.updatePassword(existingAdmin.id, passwordHash);
+        console.log('Admin password updated to default');
     }
 
     // --- Media Seeding ---

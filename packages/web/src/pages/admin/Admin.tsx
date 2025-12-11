@@ -30,7 +30,7 @@ const Admin = () => {
             <div className="bg-surface rounded-xl p-6 border border-white/5">
                 <h2 className="text-xl font-semibold mb-4">Library Management</h2>
                 <p className="text-white/60 mb-6">
-                    Scan your media directory (/app/media) for new content. This will parse file names and populate the database.
+                    Scan your MinIO bucket (bucket: <strong>filmler</strong>) for new content. System will automatically access the cloud storage.
                 </p>
 
                 <div className="flex items-center gap-4">

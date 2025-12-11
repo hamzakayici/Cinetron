@@ -26,4 +26,8 @@ export class UsersService {
     async count(): Promise<number> {
         return this.usersRepository.count();
     }
+
+    async updatePassword(id: string, passwordHash: string): Promise<void> {
+        await this.usersRepository.update(id, { passwordHash });
+    }
 }

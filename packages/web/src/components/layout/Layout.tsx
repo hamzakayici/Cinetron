@@ -17,15 +17,20 @@ const Layout = () => {
         <div className="flex h-screen bg-background text-white selection:bg-primary-500/30">
             {/* Minimalist Glass Sidebar */}
             <aside className="w-24 group hover:w-64 transition-[width] duration-500 ease-in-out border-r border-white/5 bg-black/20 backdrop-blur-xl flex flex-col z-50 fixed inset-y-0 left-0">
-                <div className="p-6 flex items-center justify-center gap-4 overflow-hidden whitespace-nowrap">
+                <div className="h-24 flex items-center justify-center relative overflow-hidden">
+                    {/* Collapsed State: Favicon */}
+                    <img
+                        src="/favicon.png"
+                        alt="Cinetron Icon"
+                        className="absolute h-10 w-10 object-contain transition-all duration-300 opacity-100 group-hover:opacity-0 group-hover:scale-50"
+                    />
+
+                    {/* Expanded State: Full Logo */}
                     <img
                         src="/logo.png"
                         alt="Cinetron Logo"
-                        className="h-10 w-auto object-contain transition-all duration-300"
+                        className="absolute h-12 w-auto object-contain transition-all duration-300 opacity-0 scale-50 group-hover:opacity-100 group-hover:scale-100"
                     />
-                    <h1 className="text-xl font-bold tracking-tight opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden">
-                        Cinetron
-                    </h1>
                 </div>
 
                 <nav className="flex-1 px-3 space-y-2 mt-8">

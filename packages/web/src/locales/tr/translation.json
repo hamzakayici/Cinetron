@@ -22,6 +22,7 @@
         "email": "E-posta",
         "password": "Şifre",
         "submit": "İzlemeye Başla",
+        "invalidCredentials": "Giriş bilgileri geçersiz. Lütfen tekrar deneyin.",
         "managedBy": "Dahili kimlik doğrulama sistemi tarafından yönetilmektedir"
     },
     "sidebar": {
