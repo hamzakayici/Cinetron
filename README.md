@@ -11,22 +11,50 @@ Bu proje bir monorepo'dur ve `pnpm` workspaces kullanır.
 - **packages/media-engine**: Go tabanlı medya işleme motoru
 - **packages/workers**: Arkaplan işçileri (Transcoding, Metadata, vb.)
 
-## Kurulum
+## Hızlı Kurulum (Quick Start) 🚀
+
+Cinetron'u tek komutla çalıştırabilirsiniz. Veritabanı, MinIO ve Admin hesabı otomatik oluşturulur.
 
 ### Gereksinimler
-- Node.js >= 18
-- pnpm >= 8
-- Go >= 1.21
 - Docker & Docker Compose
 
-### Başlangıç
+### Kurulum Adımları
+
+1. Repoyu klonlayın:
+   ```bash
+   git clone https://github.com/hamzakayici/Cinetron.git
+   cd Cinetron
+   ```
+
+2. Uygulamayı başlatın:
+   ```bash
+   docker-compose up -d --build
+   ```
+   *(İlk kurulumda build işlemi birkaç dakika sürebilir)*
+
+3. Erişim:
+   - **Web Arayüzü:** [http://localhost:3000](http://localhost:3000)
+   - **MinIO Paneli:** [http://localhost:9001](http://localhost:9001)
+
+### Giriş Bilgileri (Default Login) 🔐
+
+Sistem otomatik olarak aşağıdaki yönetici hesabını oluşturur:
+
+- **E-posta:** `admin@cinetron.com`
+- **Şifre:** `admin123`
+
+---
+
+## Geliştirici Modu (Developer Setup)
+
+Projeyi geliştirmek istiyorsanız:
 
 1. Bağımlılıkları yükleyin:
    ```bash
    pnpm install
    ```
 
-2. Altyapı servislerini (Postgres, Redis, MinIO) başlatın:
+2. Altyapı servislerini başlatın:
    ```bash
    pnpm infra:up
    ```
