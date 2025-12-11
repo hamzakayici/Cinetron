@@ -54,7 +54,14 @@ const Layout = () => {
                 </nav>
 
                 <div className="p-4 border-t border-white/5">
-                    <button className="flex items-center gap-4 px-3 py-3 w-full rounded-xl text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-all duration-300">
+                    <button
+                        onClick={() => {
+                            // Clear any stored tokens if they existed
+                            localStorage.clear();
+                            window.location.href = '/login';
+                        }}
+                        className="flex items-center gap-4 px-3 py-3 w-full rounded-xl text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-all duration-300"
+                    >
                         <LogOut size={24} className="shrink-0" />
                         <span className="font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                             Sign Out

@@ -69,11 +69,17 @@ const Library = () => {
                         transition={{ delay: 0.3 }}
                         className="flex items-center gap-4"
                     >
-                        <button className="flex items-center gap-3 rounded-lg bg-white px-8 py-3 font-bold text-black hover:bg-white/90 transition-colors">
+                        <button
+                            onClick={() => alert(`Playing ${HERO_MOVIE.title}... \n(Video Player coming soon!)`)}
+                            className="flex items-center gap-3 rounded-lg bg-white px-8 py-3 font-bold text-black hover:bg-white/90 transition-colors"
+                        >
                             <Play fill="currentColor" size={24} />
                             Play
                         </button>
-                        <button className="flex items-center gap-3 rounded-lg bg-white/20 px-8 py-3 font-bold text-white backdrop-blur-md hover:bg-white/30 transition-colors">
+                        <button
+                            onClick={() => alert(HERO_MOVIE.description)}
+                            className="flex items-center gap-3 rounded-lg bg-white/20 px-8 py-3 font-bold text-white backdrop-blur-md hover:bg-white/30 transition-colors"
+                        >
                             <Info size={24} />
                             More Info
                         </button>
@@ -102,10 +108,22 @@ const Library = () => {
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex flex-col justify-end p-4">
                                             <h4 className="font-bold text-sm">{item.title}</h4>
                                             <div className="mt-2 flex items-center gap-2">
-                                                <button className="rounded-full bg-white p-2 text-black hover:scale-110 transition-transform">
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        alert(`Playing ${item.title}...`);
+                                                    }}
+                                                    className="rounded-full bg-white p-2 text-black hover:scale-110 transition-transform"
+                                                >
                                                     <Play size={12} fill="currentColor" />
                                                 </button>
-                                                <button className="rounded-full border border-white/30 p-2 text-white hover:border-white hover:bg-white/10 transition-colors">
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        alert(`Added ${item.title} to My List`);
+                                                    }}
+                                                    className="rounded-full border border-white/30 p-2 text-white hover:border-white hover:bg-white/10 transition-colors"
+                                                >
                                                     <Plus size={12} />
                                                 </button>
                                             </div>
