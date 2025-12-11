@@ -213,8 +213,12 @@ export class MediaService implements OnModuleInit {
                 let deletedCount = 0;
 
                 for (const media of allMedia) {
-                    if (media.filePath.startsWith('minio:') && !activeFilePaths.has(media.filePath)) {
-                        this.logger.log(`Removing orphaned media: ${media.title} (${media.filePath})`);
+                    const isMinio = media.filePath.startsWith('minio:');
+                    const isLegacyMock = media.filePath.startsWith('/mock/'); // Identify old seed data
+
+                    // If it's a minio file but not in active paths OR if it's legacy mock data
+                    if ((isMinio && !activeFilePaths.has(media.filePath)) || isLegacyMock) {
+                        this.logger.log(`Removing orphaned/legacy media: ${media.title} (${media.filePath})`);
                         await this.mediaRepository.remove(media);
                         deletedCount++;
                     }

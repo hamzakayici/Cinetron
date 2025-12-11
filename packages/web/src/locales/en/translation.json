@@ -26,6 +26,12 @@
         "managedBy": "Managed by internal authentication"
     },
     "sidebar": {
+        "home": "Home",
+        "search": "Search",
+        "movies": "Movies",
+        "series": "TV Series",
+        "mylist": "My List",
+        "history": "History",
         "library": "Library",
         "settings": "Settings",
         "logout": "Sign Out"

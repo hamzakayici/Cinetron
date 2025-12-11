@@ -26,6 +26,12 @@
         "managedBy": "Dahili kimlik doğrulama sistemi tarafından yönetilmektedir"
     },
     "sidebar": {
+        "home": "Anasayfa",
+        "search": "Ara",
+        "movies": "Filmler",
+        "series": "Diziler",
+        "mylist": "Listem",
+        "history": "Geçmiş",
         "library": "Kütüphane",
         "settings": "Ayarlar",
         "logout": "Çıkış Yap"
