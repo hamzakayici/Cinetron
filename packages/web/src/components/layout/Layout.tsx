@@ -2,13 +2,15 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { LayoutGrid, Settings, LogOut, Film } from 'lucide-react';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 
 const Layout = () => {
+    const { t } = useTranslation();
     const location = useLocation();
 
     const navItems = [
-        { icon: LayoutGrid, label: 'Library', path: '/library' },
-        { icon: Settings, label: 'Settings', path: '/admin' },
+        { icon: LayoutGrid, label: t('sidebar.library'), path: '/library' },
+        { icon: Settings, label: t('sidebar.settings'), path: '/admin' },
     ];
 
     return (
@@ -64,7 +66,7 @@ const Layout = () => {
                     >
                         <LogOut size={24} className="shrink-0" />
                         <span className="font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            Sign Out
+                            {t('sidebar.logout')}
                         </span>
                     </button>
                 </div>

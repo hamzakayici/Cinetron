@@ -22,4 +22,8 @@ export class UsersService {
         const newUser = this.usersRepository.create(user);
         return this.usersRepository.save(newUser);
     }
+
+    async count(): Promise<number> {
+        return this.usersRepository.count();
+    }
 }

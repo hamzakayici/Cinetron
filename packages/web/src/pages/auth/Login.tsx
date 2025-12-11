@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 const Login = () => {
+    const { t } = useTranslation();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
@@ -40,7 +42,7 @@ const Login = () => {
                         transition={{ delay: 0.3 }}
                         className="mt-3 text-sm font-medium text-white/40"
                     >
-                        Your personal streaming sanctuary
+                        {t('welcome.subtitle')}
                     </motion.p>
                 </div>
 
@@ -49,7 +51,7 @@ const Login = () => {
                         <form className="space-y-6" onSubmit={handleLogin}>
                             <div className="space-y-4">
                                 <div>
-                                    <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-white/50">Email</label>
+                                    <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-white/50">{t('login.email')}</label>
                                     <input
                                         type="email"
                                         required
@@ -60,7 +62,7 @@ const Login = () => {
                                     />
                                 </div>
                                 <div>
-                                    <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-white/50">Password</label>
+                                    <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-white/50">{t('login.password')}</label>
                                     <input
                                         type="password"
                                         required
@@ -78,13 +80,13 @@ const Login = () => {
                                 type="submit"
                                 className="w-full rounded-lg bg-gradient-to-r from-primary-600 to-primary-800 px-4 py-3.5 font-bold text-white shadow-lg shadow-primary-900/40 transition-all hover:shadow-primary-900/60"
                             >
-                                Start Watching
+                                {t('login.submit')}
                             </motion.button>
                         </form>
                     </div>
                     <div className="border-t border-white/5 bg-white/5 px-8 py-4 text-center">
                         <p className="text-xs text-white/30">
-                            Managed by internal authentication
+                            {t('login.managedBy')}
                         </p>
                     </div>
                 </div>

@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { MediaModule } from './media/media.module';
 import { typeOrmConfig } from './config/typeorm.config';
+import { SystemModule } from './system/system.module';
 
 @Module({
     imports: [
@@ -17,9 +18,9 @@ import { typeOrmConfig } from './config/typeorm.config';
             inject: [ConfigService],
         }),
         AuthModule,
-        AuthModule,
         UsersModule,
         MediaModule,
+        SystemModule,
     ],
     controllers: [],
     providers: [],

@@ -1,0 +1,39 @@
+{
+    "welcome": {
+        "title": "Cinetron'a Hoş Geldiniz",
+        "subtitle": "Kişisel yayın platformunuzu kurmaya başlayın",
+        "selectLanguage": "Dil Seçimi / Select Language",
+        "next": "Devam Et",
+        "setupAdmin": "Yönetici Hesabı Oluştur"
+    },
+    "setup": {
+        "adminTitle": "Yönetici Hesabı",
+        "adminSubtitle": "Sistemi yönetmek için bir hesap oluşturun",
+        "email": "E-posta",
+        "password": "Şifre",
+        "firstName": "Ad",
+        "lastName": "Soyad",
+        "complete": "Kurulumu Tamamla",
+        "success": "Kurulum Başarılı!",
+        "redirecting": "Yönlendiriliyorsunuz..."
+    },
+    "login": {
+        "title": "Giriş Yap",
+        "email": "E-posta",
+        "password": "Şifre",
+        "submit": "İzlemeye Başla",
+        "managedBy": "Dahili kimlik doğrulama sistemi tarafından yönetilmektedir"
+    },
+    "sidebar": {
+        "library": "Kütüphane",
+        "settings": "Ayarlar",
+        "logout": "Çıkış Yap"
+    },
+    "library": {
+        "play": "Oynat",
+        "moreInfo": "Daha Fazla Bilgi",
+        "continueWatching": "İzlemeye Devam Et",
+        "recentlyAdded": "Son Eklenenler",
+        "scifi": "Bilim Kurgu & Fantastik"
+    }
+}
