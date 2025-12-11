@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutGrid, Settings, LogOut } from 'lucide-react';
+import { Settings, LogOut, Search, Film, Tv, List, History, Home } from 'lucide-react';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
@@ -9,7 +9,12 @@ const Layout = () => {
     const location = useLocation();
 
     const navItems = [
-        { icon: LayoutGrid, label: t('sidebar.library'), path: '/library' },
+        { icon: Home, label: t('sidebar.home') || 'Home', path: '/library' }, // Currently Library is Home
+        { icon: Search, label: t('sidebar.search') || 'Search', path: '/search' },
+        { icon: Film, label: t('sidebar.movies') || 'Movies', path: '/movies' },
+        { icon: Tv, label: t('sidebar.series') || 'Series', path: '/series' },
+        { icon: List, label: t('sidebar.mylist') || 'My List', path: '/list' },
+        { icon: History, label: t('sidebar.history') || 'History', path: '/history' },
         { icon: Settings, label: t('sidebar.settings'), path: '/admin' },
     ];
 

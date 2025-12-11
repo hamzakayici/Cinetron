@@ -177,6 +177,7 @@ export class MediaService implements OnModuleInit {
             listStream.on('end', async () => {
                 let added = 0;
                 let found = 0;
+                const activeFilePaths = new Set<string>();
 
                 for (const obj of objects) {
                     const name = obj.name || obj.key;
@@ -187,6 +188,8 @@ export class MediaService implements OnModuleInit {
 
                     found++;
                     const filePath = `minio:${bucket}:${name}`;
+                    activeFilePaths.add(filePath); // Track active files
+
                     const exists = await this.mediaRepository.findOne({ where: { filePath } });
 
                     if (!exists) {
@@ -211,6 +214,23 @@ export class MediaService implements OnModuleInit {
                         added++;
                     }
                 }
+
+                // Cleanup Orphans: Delete DB records that are NOT in MinIO anymore
+                const allMedia = await this.mediaRepository.find();
+                let deletedCount = 0;
+
+                for (const media of allMedia) {
+                    if (media.filePath.startsWith('minio:') && !activeFilePaths.has(media.filePath)) {
+                        this.logger.log(`Removing orphaned media: ${media.title} (${media.filePath})`);
+                        await this.mediaRepository.remove(media);
+                        deletedCount++;
+                    }
+                }
+
+                if (deletedCount > 0) {
+                    this.logger.log(`Cleanup complete. Removed ${deletedCount} orphaned items.`);
+                }
+
                 resolve({ found, added });
             });
         });
