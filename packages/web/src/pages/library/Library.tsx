@@ -1,24 +1,40 @@
 import { Play, Info, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { getMedia, Media } from '../../services/media';
 
 const HERO_MOVIE = {
     title: "Dune: Part Two",
     description: "Paul Atreides unites with Chani and the Fremen while on a warpath of revenge against the conspirators who destroyed his family.",
-    backdrop: "https://image.tmdb.org/t/p/original/xOMo8BRK7PfcJv9JCnx7s5hj0PX.jpg", // Example backdrop
+    backdrop: "https://image.tmdb.org/t/p/original/xOMo8BRK7PfcJv9JCnx7s5hj0PX.jpg",
     logo: "DUNE LOGO"
 };
 
 const Library = () => {
+    const [mediaItems, setMediaItems] = useState<Media[]>([]);
+
+    useEffect(() => {
+        const fetchMedia = async () => {
+            try {
+                const data = await getMedia();
+                setMediaItems(data);
+            } catch (err) {
+                console.error("Failed to fetch media", err);
+            }
+        };
+
+        fetchMedia();
+    }, []);
+
     const categories = [
-        { title: "Continue Watching", aspect: "video" },
-        { title: "Trending Now", aspect: "poster" },
-        { title: "Sci-Fi & Fantasy", aspect: "poster" },
-        { title: "Action Movies", aspect: "poster" },
+        { title: "Continue Watching", aspect: "video", items: [] }, // Placeholder
+        { title: "Recently Added", aspect: "poster", items: mediaItems }, // Real Data
+        { title: "Sci-Fi & Fantasy", aspect: "poster", items: [] }, // Placeholder
     ];
 
     return (
         <div className="pb-20">
-            {/* Hero Section */}
+            {/* Hero Section (Static for now) */}
             <div className="relative h-[80vh] w-full overflow-hidden">
                 <div className="absolute inset-0">
                     <img
@@ -68,40 +84,42 @@ const Library = () => {
             {/* Content Rows */}
             <div className="relative z-20 -mt-32 space-y-12 px-12">
                 {categories.map((category, idx) => (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: idx * 0.1 }}
-                        key={idx}
-                    >
-                        <h3 className="mb-4 text-xl font-bold text-white/90">{category.title}</h3>
-                        <div className="flex gap-4 overflow-x-auto pb-8 scrollbar-hide snap-x">
-                            {Array.from({ length: 8 }).map((_, i) => (
-                                <div
-                                    key={i}
-                                    className={`relative flex-none snap-start overflow-hidden rounded-lg bg-surface transition-all duration-300 hover:z-30 hover:scale-105 hover:ring-2 hover:ring-primary-500 cursor-pointer group ${category.aspect === 'video' ? 'w-80 aspect-video' : 'w-48 aspect-[2/3]'}`}
-                                >
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex flex-col justify-end p-4">
-                                        <h4 className="font-bold text-sm">Movie Title {i + 1}</h4>
-                                        <div className="mt-2 flex items-center gap-2">
-                                            <button className="rounded-full bg-white p-2 text-black hover:scale-110 transition-transform">
-                                                <Play size={12} fill="currentColor" />
-                                            </button>
-                                            <button className="rounded-full border border-white/30 p-2 text-white hover:border-white hover:bg-white/10 transition-colors">
-                                                <Plus size={12} />
-                                            </button>
+                    category.items.length > 0 && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: idx * 0.1 }}
+                            key={idx}
+                        >
+                            <h3 className="mb-4 text-xl font-bold text-white/90">{category.title}</h3>
+                            <div className="flex gap-4 overflow-x-auto pb-8 scrollbar-hide snap-x">
+                                {category.items.map((item, i) => (
+                                    <div
+                                        key={item.id || i}
+                                        className={`relative flex-none snap-start overflow-hidden rounded-lg bg-surface transition-all duration-300 hover:z-30 hover:scale-105 hover:ring-2 hover:ring-primary-500 cursor-pointer group ${category.aspect === 'video' ? 'w-80 aspect-video' : 'w-48 aspect-[2/3]'}`}
+                                    >
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex flex-col justify-end p-4">
+                                            <h4 className="font-bold text-sm">{item.title}</h4>
+                                            <div className="mt-2 flex items-center gap-2">
+                                                <button className="rounded-full bg-white p-2 text-black hover:scale-110 transition-transform">
+                                                    <Play size={12} fill="currentColor" />
+                                                </button>
+                                                <button className="rounded-full border border-white/30 p-2 text-white hover:border-white hover:bg-white/10 transition-colors">
+                                                    <Plus size={12} />
+                                                </button>
+                                            </div>
                                         </div>
+                                        <img
+                                            src={item.posterUrl || `https://placehold.co/400x600/1a1a1a/333333?text=${encodeURIComponent(item.title)}`}
+                                            className="h-full w-full object-cover"
+                                            alt={item.title}
+                                        />
                                     </div>
-                                    <img
-                                        src={`https://placehold.co/${category.aspect === 'video' ? '640x360' : '400x600'}/1a1a1a/333333?text=${i + 1}`}
-                                        className="h-full w-full object-cover"
-                                        alt="Thumbnail"
-                                    />
-                                </div>
-                            ))}
-                        </div>
-                    </motion.div>
+                                ))}
+                            </div>
+                        </motion.div>
+                    )
                 ))}
             </div>
         </div>
