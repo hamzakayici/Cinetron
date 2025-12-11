@@ -1,7 +1,7 @@
 import { Play, Info, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
-import { getMedia, Media } from '../../services/media';
+import { getMedia, type Media } from '../../services/media';
 
 const HERO_MOVIE = {
     title: "Dune: Part Two",
