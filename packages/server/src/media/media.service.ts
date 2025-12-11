@@ -219,36 +219,6 @@ export class MediaService implements OnModuleInit {
             if (!this.minioClient) return resolve(0);
 
             const bucket = this.minioBucket;
-            const stream = this.minioClient.listObjects(bucket, '', true);
-            let added = 0;
-
-            stream.on('data', async (obj) => {
-                const name = obj.name;
-                if (!name) return;
-
-                const ext = path.extname(name).toLowerCase();
-                if (!VIDEO_EXTENSIONS.includes(ext)) return;
-
-                const filePath = `minio:${bucket}:${name}`;
-                const exists = await this.mediaRepository.findOne({ where: { filePath } });
-
-                if (!exists) {
-                    const fileName = path.basename(name);
-                    const { title, year } = this.parseFileName(fileName);
-
-                    const newMedia = this.mediaRepository.create({
-                        title, year, filePath, originalFileName: name, type: 'movie',
-                        posterUrl: `https://placehold.co/400x600/1a1a1a/ffffff?text=${encodeURIComponent(title)}`,
-                        overview: `Auto-detected from MinIO: ${fileName}`, processed: true
-                    });
-
-                    // We need to pause stream or handle async properly if inserted one by one
-                    // But listObjects stream is fast. Save promise array?
-                    // For now, let's just fire and forget save or simple await if possible? 
-                    // Stream 'data' event is not async await friendly for flow control.
-                    // Better approach: collect all items then process.
-                }
-            });
 
             // Re-implementing with async iterator for better control if minio supports it, 
             // otherwise collect list.
@@ -258,6 +228,7 @@ export class MediaService implements OnModuleInit {
             listStream.on('data', (obj) => objects.push(obj));
             listStream.on('error', (err) => reject(err));
             listStream.on('end', async () => {
+                let added = 0;
                 for (const obj of objects) {
                     const name = obj.name;
                     if (!name) continue;
