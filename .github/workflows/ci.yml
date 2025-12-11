@@ -40,6 +40,9 @@ jobs:
     - name: Install dependencies
       run: pnpm install
 
+    - name: Build Plugin API
+      run: pnpm --filter @cinetron/plugin-api build
+
     - name: Build Server
       run: pnpm --filter @cinetron/server build
 
@@ -48,9 +51,6 @@ jobs:
 
     - name: Build Workers
       run: pnpm --filter @cinetron/workers build
-      
-    - name: Build Plugin API
-      run: pnpm --filter @cinetron/plugin-api build
 
   build-go:
     runs-on: ubuntu-latest
