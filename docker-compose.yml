@@ -27,6 +27,7 @@ services:
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin
       MINIO_BUCKET: filmler
+      MINIO_EXTERNAL_URL: http://localhost:9000 # Browser-accessible MinIO URL
 
       # Auth
       JWT_SECRET: cinetron_secret_key_change_me

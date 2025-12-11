@@ -115,7 +115,20 @@ export class MediaService implements OnModuleInit {
             const bucket = parts[1];
             const objectName = parts.slice(2).join(':');
 
-            return await this.minioClient.presignedGetObject(bucket, objectName, 3 * 60 * 60);
+            let presignedUrl = await this.minioClient.presignedGetObject(bucket, objectName, 3 * 60 * 60);
+
+            // CRITICAL FIX: Replace internal docker hostname with localhost for browser access
+            // MinIO generates URLs with internal hostname (e.g., "minio:9000") which browsers can't reach
+            // We need to replace it with the externally accessible URL
+            const minioInternalHost = process.env.MINIO_ENDPOINT || 'minio';
+            const minioPort = process.env.MINIO_API_PORT || '9000';
+            const minioExternalUrl = process.env.MINIO_EXTERNAL_URL || `http://localhost:${minioPort}`;
+
+            // Replace the internal hostname in the URL with the external one
+            presignedUrl = presignedUrl.replace(`${minioInternalHost}:${minioPort}`, minioExternalUrl.replace(/^https?:\/\//, ''));
+
+            this.logger.log(`Generated presigned URL for ${objectName}: ${presignedUrl.substring(0, 100)}...`);
+            return presignedUrl;
         } catch (err) {
             this.logger.error(`Failed to generate presigned URL for ${filePath}`, err);
             return null;
