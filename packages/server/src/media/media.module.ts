@@ -6,9 +6,11 @@ import { Media } from './media.entity';
 
 import { BullModule } from '@nestjs/bullmq';
 
+import { WatchHistory } from './watch-history.entity';
+
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Media]),
+        TypeOrmModule.forFeature([Media, WatchHistory]),
         BullModule.registerQueue({
             name: 'metadata-queue',
         }),

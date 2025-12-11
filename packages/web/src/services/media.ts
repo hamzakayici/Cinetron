@@ -39,6 +39,30 @@ export const getMediaById = async (id: string): Promise<Media> => {
     return res.json();
 };
 
+export const saveProgress = async (id: string, progress: number): Promise<void> => {
+    const token = localStorage.getItem('token');
+    await fetch(`${API_URL}/api/media/${id}/progress`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ progress })
+    });
+};
+
+export const getProgress = async (id: string): Promise<number> => {
+    const token = localStorage.getItem('token');
+    const res = await fetch(`${API_URL}/api/media/${id}/progress`, {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    });
+    if (!res.ok) return 0;
+    const data = await res.json();
+    return data.progress;
+};
+
 export const scanLibrary = async (): Promise<{ message: string, added: number }> => {
     const token = localStorage.getItem('token');
     const res = await fetch(`${API_URL}/api/media/scan`, {

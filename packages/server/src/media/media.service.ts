@@ -11,6 +11,8 @@ import * as Minio from 'minio';
 // Define supported video extensions
 const VIDEO_EXTENSIONS = ['.mp4', '.mkv', '.avi', '.mov', '.webm'];
 
+import { WatchHistory } from './watch-history.entity';
+
 @Injectable()
 export class MediaService implements OnModuleInit {
     private readonly logger = new Logger(MediaService.name);
@@ -24,6 +26,8 @@ export class MediaService implements OnModuleInit {
     constructor(
         @InjectRepository(Media)
         private mediaRepository: Repository<Media>,
+        @InjectRepository(WatchHistory)
+        private historyRepository: Repository<WatchHistory>,
         @InjectQueue('metadata-queue') private metadataQueue: Queue,
     ) {
         this.initializeMinio();
@@ -270,5 +274,30 @@ export class MediaService implements OnModuleInit {
         title = title.replace(/[._]/g, ' ').trim();
 
         return { title, year };
+    }
+
+    async saveProgress(userId: string, mediaId: string, progressSeconds: number) {
+        let history = await this.historyRepository.findOne({
+            where: { userId, mediaId }
+        });
+
+        if (!history) {
+            history = this.historyRepository.create({
+                userId,
+                mediaId,
+                progressSeconds
+            });
+        } else {
+            history.progressSeconds = progressSeconds;
+        }
+
+        return this.historyRepository.save(history);
+    }
+
+    async getProgress(userId: string, mediaId: string): Promise<number> {
+        const history = await this.historyRepository.findOne({
+            where: { userId, mediaId }
+        });
+        return history ? history.progressSeconds : 0;
     }
 }

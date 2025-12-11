@@ -27,6 +27,10 @@ export class UsersService {
         return this.usersRepository.count();
     }
 
+    async findAll(): Promise<User[]> {
+        return this.usersRepository.find();
+    }
+
     async updatePassword(id: string, passwordHash: string): Promise<void> {
         await this.usersRepository.update(id, { passwordHash });
     }
