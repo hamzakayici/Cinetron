@@ -20,25 +20,25 @@ const Layout = () => {
 
     return (
         <div className="flex h-screen bg-background text-white selection:bg-primary-500/30">
-            {/* Minimalist Glass Sidebar */}
-            <aside className="w-24 group hover:w-64 transition-[width] duration-500 ease-in-out border-r border-white/5 bg-black/20 backdrop-blur-xl flex flex-col z-50 fixed inset-y-0 left-0">
-                <div className="h-24 flex items-center justify-center relative overflow-hidden">
-                    {/* Collapsed State: Favicon */}
+            {/* Premium Glass Sidebar */}
+            <aside className="fixed inset-y-0 left-0 z-50 flex flex-col w-20 hover:w-72 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group border-r border-white/5 bg-black/40 backdrop-blur-2xl shadow-[5px_0_30px_rgba(0,0,0,0.5)]">
+                {/* Logo Section */}
+                <div className="h-24 flex items-center justify-center relative shadow-sm">
+                    {/* Collapsed Logo */}
                     <img
                         src="/favicon.png"
-                        alt="Cinetron Icon"
-                        className="absolute h-10 w-10 object-contain transition-all duration-300 opacity-100 group-hover:opacity-0 group-hover:scale-50"
+                        alt="Icon"
+                        className="absolute h-8 w-8 object-contain transition-all duration-300 group-hover:opacity-0 group-hover:scale-75 opacity-100"
                     />
 
-                    {/* Expanded State: Full Logo */}
-                    <img
-                        src="/logo.png"
-                        alt="Cinetron Logo"
-                        className="absolute h-12 w-auto object-contain transition-all duration-300 opacity-0 scale-50 group-hover:opacity-100 group-hover:scale-100"
-                    />
+                    {/* Expanded Logo */}
+                    <div className="absolute inset-0 flex items-center px-6 transition-all duration-500 opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0">
+                        <img src="/logo.png" alt="Cinetron" className="h-8 w-auto object-contain" />
+                    </div>
                 </div>
 
-                <nav className="flex-1 px-3 space-y-2 mt-8">
+                {/* Navigation Items */}
+                <nav className="flex-1 px-3 space-y-1 mt-6">
                     {navItems.map((item) => {
                         const isActive = location.pathname === item.path;
                         return (
@@ -46,38 +46,52 @@ const Layout = () => {
                                 key={item.path}
                                 to={item.path}
                                 className={clsx(
-                                    "flex items-center gap-4 px-3 py-3 rounded-xl transition-all duration-300 group-hover:px-4",
+                                    "relative flex items-center h-12 px-3.5 rounded-xl transition-all duration-300 overflow-hidden",
                                     isActive
-                                        ? "bg-primary-600/10 text-primary-400"
-                                        : "text-white/40 hover:text-white hover:bg-white/5"
+                                        ? "bg-gradient-to-r from-primary-600/20 to-primary-600/5 text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]"
+                                        : "text-white/50 hover:text-white hover:bg-white/5"
                                 )}
                             >
-                                <item.icon size={24} className={clsx("shrink-0 transition-colors", isActive ? "text-primary-400" : "text-white/40 group-hover:text-white")} />
-                                <span className={clsx("font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300", isActive ? "text-primary-100" : "")}>
-                                    {item.label}
-                                </span>
+                                {/* Active Glow Pill */}
                                 {isActive && (
                                     <motion.div
-                                        layoutId="activeNav"
-                                        className="absolute left-0 w-1 h-8 bg-primary-500 rounded-r-full"
+                                        layoutId="activeGlow"
+                                        className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary-500 rounded-r-full shadow-[0_0_12px_#8b5cf6]"
                                     />
                                 )}
+
+                                <div className="min-w-[24px] flex justify-center">
+                                    <item.icon
+                                        size={22}
+                                        className={clsx(
+                                            "transition-colors duration-300",
+                                            isActive ? "text-primary-400 drop-shadow-[0_0_8px_rgba(139,92,246,0.5)]" : "group-hover:text-white"
+                                        )}
+                                    />
+                                </div>
+
+                                <span className={clsx(
+                                    "ml-4 font-medium whitespace-nowrap transition-all duration-300 opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0",
+                                    isActive ? "text-white" : "text-white/60 group-hover:text-white"
+                                )}>
+                                    {item.label}
+                                </span>
                             </Link>
                         )
                     })}
                 </nav>
 
+                {/* Bottom Actions */}
                 <div className="p-4 border-t border-white/5">
                     <button
                         onClick={() => {
-                            // Clear any stored tokens if they existed
                             localStorage.clear();
                             window.location.href = '/login';
                         }}
-                        className="flex items-center gap-4 px-3 py-3 w-full rounded-xl text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-all duration-300"
+                        className="flex items-center h-12 px-3.5 w-full rounded-xl text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors group/logout"
                     >
-                        <LogOut size={24} className="shrink-0" />
-                        <span className="font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <LogOut size={22} className="shrink-0 transition-transform group-hover/logout:-translate-x-1" />
+                        <span className="ml-4 font-medium whitespace-nowrap opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                             {t('sidebar.logout')}
                         </span>
                     </button>
