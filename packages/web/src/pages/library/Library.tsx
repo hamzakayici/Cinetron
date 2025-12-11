@@ -41,7 +41,7 @@ const Library = () => {
     return (
         <div className="pb-20">
             {/* Hero Section */}
-            <div className="relative h-[80vh] w-full overflow-hidden">
+            <div className="relative h-[60vh] md:h-[80vh] w-full overflow-hidden">
                 <div className="absolute inset-0">
                     <img
                         src={heroItem.backdropUrl || heroItem.backdrop || HERO_MOVIE.backdrop}
@@ -52,11 +52,11 @@ const Library = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
                 </div>
 
-                <div className="relative z-10 flex h-full flex-col justify-end px-12 pb-24">
+                <div className="relative z-10 flex h-full flex-col justify-end px-4 md:px-12 pb-12 md:pb-32">
                     <motion.h1
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="mb-4 text-7xl font-black uppercase tracking-tighter text-white drop-shadow-2xl"
+                        className="mb-2 md:mb-4 text-4xl md:text-7xl font-black uppercase tracking-tighter text-white drop-shadow-2xl"
                     >
                         {heroItem.title}
                     </motion.h1>
@@ -64,7 +64,7 @@ const Library = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.2 }}
-                        className="mb-8 max-w-2xl text-lg font-medium text-white/80 drop-shadow-md"
+                        className="mb-6 md:mb-8 line-clamp-3 md:line-clamp-none max-w-2xl text-sm md:text-lg font-medium text-white/80 drop-shadow-md"
                     >
                         {heroItem.overview || HERO_MOVIE.description}
                     </motion.p>
@@ -77,24 +77,24 @@ const Library = () => {
                     >
                         <button
                             onClick={() => heroItem && heroItem.id ? navigate(`/watch/${heroItem.id}`) : alert(t('library.noMedia'))}
-                            className="flex items-center gap-3 rounded-lg bg-white px-8 py-3 font-bold text-black hover:bg-white/90 transition-colors"
+                            className="flex items-center gap-2 md:gap-3 rounded-lg bg-white px-6 md:px-8 py-2 md:py-3 font-bold text-black hover:bg-white/90 transition-colors text-sm md:text-base"
                         >
-                            <Play fill="currentColor" size={24} />
+                            <Play fill="currentColor" size={20} className="md:w-6 md:h-6" />
                             {t('library.play')}
                         </button>
                         <button
                             onClick={() => alert(heroItem.overview || heroItem.description || HERO_MOVIE.description)}
-                            className="flex items-center gap-3 rounded-lg bg-white/20 px-8 py-3 font-bold text-white backdrop-blur-md hover:bg-white/30 transition-colors"
+                            className="flex items-center gap-2 md:gap-3 rounded-lg bg-white/20 px-6 md:px-8 py-2 md:py-3 font-bold text-white backdrop-blur-md hover:bg-white/30 transition-colors text-sm md:text-base"
                         >
-                            <Info size={24} />
+                            <Info size={20} className="md:w-6 md:h-6" />
                             {t('library.moreInfo')}
                         </button>
                     </motion.div>
                 </div>
             </div>
 
-            {/* Content Rows */}
-            <div className="relative z-20 -mt-32 space-y-12 px-12">
+            {/* Content Rows - Fixed overlap by reducing negative margin and ensuring z-index */}
+            <div className="relative z-20 -mt-10 md:-mt-24 space-y-8 md:space-y-12 px-4 md:px-12">
                 {categories.map((category, idx) => (
                     category.items.length > 0 && (
                         <motion.div
