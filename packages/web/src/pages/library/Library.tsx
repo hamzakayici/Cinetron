@@ -1,30 +1,107 @@
+import { Play, Info, Plus } from 'lucide-react';
+import { motion } from 'framer-motion';
+
+const HERO_MOVIE = {
+    title: "Dune: Part Two",
+    description: "Paul Atreides unites with Chani and the Fremen while on a warpath of revenge against the conspirators who destroyed his family.",
+    backdrop: "https://image.tmdb.org/t/p/original/xOMo8BRK7PfcJv9JCnx7s5hj0PX.jpg", // Example backdrop
+    logo: "DUNE LOGO"
+};
+
 const Library = () => {
-    const items = Array.from({ length: 10 }).map((_, i) => ({
-        id: i,
-        title: `Movie Title ${i + 1}`,
-        year: 2023,
-        poster: 'https://placehold.co/300x450/1e293b/cbd5e1?text=Poster',
-    }));
+    const categories = [
+        { title: "Continue Watching", aspect: "video" },
+        { title: "Trending Now", aspect: "poster" },
+        { title: "Sci-Fi & Fantasy", aspect: "poster" },
+        { title: "Action Movies", aspect: "poster" },
+    ];
 
     return (
-        <div>
-            <h2 className="text-3xl font-bold mb-6">Library</h2>
+        <div className="pb-20">
+            {/* Hero Section */}
+            <div className="relative h-[80vh] w-full overflow-hidden">
+                <div className="absolute inset-0">
+                    <img
+                        src={HERO_MOVIE.backdrop}
+                        alt="Hero Backdrop"
+                        className="h-full w-full object-cover object-top opacity-60"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
+                </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                {items.map((item) => (
-                    <div key={item.id} className="group relative bg-slate-900 rounded-lg overflow-hidden shadow-lg hover:shadow-cyan-500/20 transition-all duration-300 hover:-translate-y-1">
-                        <div className="aspect-[2/3] w-full overflow-hidden">
-                            <img
-                                src={item.poster}
-                                alt={item.title}
-                                className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            />
+                <div className="relative z-10 flex h-full flex-col justify-end px-12 pb-24">
+                    <motion.h1
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mb-4 text-7xl font-black uppercase tracking-tighter text-white drop-shadow-2xl"
+                    >
+                        {HERO_MOVIE.title}
+                    </motion.h1>
+                    <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                        className="mb-8 max-w-2xl text-lg font-medium text-white/80 drop-shadow-md"
+                    >
+                        {HERO_MOVIE.description}
+                    </motion.p>
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="flex items-center gap-4"
+                    >
+                        <button className="flex items-center gap-3 rounded-lg bg-white px-8 py-3 font-bold text-black hover:bg-white/90 transition-colors">
+                            <Play fill="currentColor" size={24} />
+                            Play
+                        </button>
+                        <button className="flex items-center gap-3 rounded-lg bg-white/20 px-8 py-3 font-bold text-white backdrop-blur-md hover:bg-white/30 transition-colors">
+                            <Info size={24} />
+                            More Info
+                        </button>
+                    </motion.div>
+                </div>
+            </div>
+
+            {/* Content Rows */}
+            <div className="relative z-20 -mt-32 space-y-12 px-12">
+                {categories.map((category, idx) => (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: idx * 0.1 }}
+                        key={idx}
+                    >
+                        <h3 className="mb-4 text-xl font-bold text-white/90">{category.title}</h3>
+                        <div className="flex gap-4 overflow-x-auto pb-8 scrollbar-hide snap-x">
+                            {Array.from({ length: 8 }).map((_, i) => (
+                                <div
+                                    key={i}
+                                    className={`relative flex-none snap-start overflow-hidden rounded-lg bg-surface transition-all duration-300 hover:z-30 hover:scale-105 hover:ring-2 hover:ring-primary-500 cursor-pointer group ${category.aspect === 'video' ? 'w-80 aspect-video' : 'w-48 aspect-[2/3]'}`}
+                                >
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex flex-col justify-end p-4">
+                                        <h4 className="font-bold text-sm">Movie Title {i + 1}</h4>
+                                        <div className="mt-2 flex items-center gap-2">
+                                            <button className="rounded-full bg-white p-2 text-black hover:scale-110 transition-transform">
+                                                <Play size={12} fill="currentColor" />
+                                            </button>
+                                            <button className="rounded-full border border-white/30 p-2 text-white hover:border-white hover:bg-white/10 transition-colors">
+                                                <Plus size={12} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <img
+                                        src={`https://placehold.co/${category.aspect === 'video' ? '640x360' : '400x600'}/1a1a1a/333333?text=${i + 1}`}
+                                        className="h-full w-full object-cover"
+                                        alt="Thumbnail"
+                                    />
+                                </div>
+                            ))}
                         </div>
-                        <div className="p-4 absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-950 via-slate-900/90 to-transparent pt-12 translate-y-2 group-hover:translate-y-0 transition-transform">
-                            <h3 className="font-semibold text-lg truncate">{item.title}</h3>
-                            <p className="text-slate-400 text-sm">{item.year}</p>
-                        </div>
-                    </div>
+                    </motion.div>
                 ))}
             </div>
         </div>

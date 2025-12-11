@@ -1,40 +1,77 @@
-import { Outlet, Link } from 'react-router-dom';
-import { LayoutGrid, Settings, LogOut, Film } from 'lucide-react';
+import { Outlet, Link, useLocation } from 'react-router-dom';
+import { LayoutGrid, Settings, LogOut, Film, Search, Bell } from 'lucide-react';
+import { motion } from 'framer-motion';
+import clsx from 'clsx';
 
 const Layout = () => {
+    const location = useLocation();
+
+    const navItems = [
+        { icon: LayoutGrid, label: 'Library', path: '/library' },
+        { icon: Settings, label: 'Settings', path: '/admin' },
+    ];
+
     return (
-        <div className="flex h-screen bg-slate-950 text-white">
-            {/* Sidebar */}
-            <aside className="w-64 border-r border-slate-800 bg-slate-900 flex flex-col">
-                <div className="p-6">
-                    <h1 className="text-2xl font-bold text-cyan-500 flex items-center gap-2">
-                        <Film className="h-8 w-8" />
+        <div className="flex h-screen bg-background text-white selection:bg-primary-500/30">
+            {/* Minimalist Glass Sidebar */}
+            <aside className="w-24 group hover:w-64 transition-[width] duration-500 ease-in-out border-r border-white/5 bg-black/20 backdrop-blur-xl flex flex-col z-50 fixed inset-y-0 left-0">
+                <div className="p-6 flex items-center gap-4 overflow-hidden whitespace-nowrap">
+                    <div className="h-10 w-10 shrink-0 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg shadow-primary-900/50">
+                        <Film className="h-6 w-6 text-white" />
+                    </div>
+                    <h1 className="text-xl font-bold tracking-tight opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         Cinetron
                     </h1>
                 </div>
 
-                <nav className="flex-1 px-4 space-y-2">
-                    <Link to="/library" className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-lg transition-colors">
-                        <LayoutGrid size={20} />
-                        Library
-                    </Link>
-                    <Link to="/admin" className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-lg transition-colors">
-                        <Settings size={20} />
-                        Settings
-                    </Link>
+                <nav className="flex-1 px-3 space-y-2 mt-8">
+                    {navItems.map((item) => {
+                        const isActive = location.pathname === item.path;
+                        return (
+                            <Link
+                                key={item.path}
+                                to={item.path}
+                                className={clsx(
+                                    "flex items-center gap-4 px-3 py-3 rounded-xl transition-all duration-300 group-hover:px-4",
+                                    isActive
+                                        ? "bg-primary-600/10 text-primary-400"
+                                        : "text-white/40 hover:text-white hover:bg-white/5"
+                                )}
+                            >
+                                <item.icon size={24} className={clsx("shrink-0 transition-colors", isActive ? "text-primary-400" : "text-white/40 group-hover:text-white")} />
+                                <span className={clsx("font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300", isActive ? "text-primary-100" : "")}>
+                                    {item.label}
+                                </span>
+                                {isActive && (
+                                    <motion.div
+                                        layoutId="activeNav"
+                                        className="absolute left-0 w-1 h-8 bg-primary-500 rounded-r-full"
+                                    />
+                                )}
+                            </Link>
+                        )
+                    })}
                 </nav>
 
-                <div className="p-4 border-t border-slate-800">
-                    <button className="flex items-center gap-3 px-4 py-2 w-full text-slate-400 hover:text-white transition-colors">
-                        <LogOut size={20} />
-                        Sign Out
+                <div className="p-4 border-t border-white/5">
+                    <button className="flex items-center gap-4 px-3 py-3 w-full rounded-xl text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-all duration-300">
+                        <LogOut size={24} className="shrink-0" />
+                        <span className="font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            Sign Out
+                        </span>
                     </button>
                 </div>
             </aside>
 
-            {/* Main Content */}
-            <main className="flex-1 overflow-auto bg-slate-950 p-8">
-                <Outlet />
+            {/* Main Content Area */}
+            <main className="flex-1 ml-24 relative">
+                {/* Top Overlay Gradient */}
+                <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-background via-background/80 to-transparent z-10 pointer-events-none" />
+
+                {/* Scrollable Content */}
+                <div className="h-full overflow-y-auto overflow-x-hidden scroll-smooth">
+                    <Outlet />
+                </div>
             </main>
         </div>
     );
