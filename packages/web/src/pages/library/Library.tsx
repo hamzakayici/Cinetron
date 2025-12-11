@@ -1,6 +1,7 @@
 import { Play, Info, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getMedia, type Media } from '../../services/media';
 
@@ -13,6 +14,7 @@ const HERO_MOVIE = {
 
 const Library = () => {
     const { t } = useTranslation();
+    const navigate = useNavigate();
     const [mediaItems, setMediaItems] = useState<Media[]>([]);
 
     useEffect(() => {
@@ -74,7 +76,7 @@ const Library = () => {
                         className="flex items-center gap-4"
                     >
                         <button
-                            onClick={() => alert(`Playing ${heroItem.title}... \n(Video Player coming soon!)`)}
+                            onClick={() => heroItem && heroItem.id ? navigate(`/watch/${heroItem.id}`) : alert(t('library.noMedia'))}
                             className="flex items-center gap-3 rounded-lg bg-white px-8 py-3 font-bold text-black hover:bg-white/90 transition-colors"
                         >
                             <Play fill="currentColor" size={24} />
@@ -107,6 +109,7 @@ const Library = () => {
                                 {category.items.map((item, i) => (
                                     <div
                                         key={item.id || i}
+                                        onClick={() => navigate(`/watch/${item.id}`)}
                                         className={`relative flex-none snap-start overflow-hidden rounded-lg bg-surface transition-all duration-300 hover:z-30 hover:scale-105 hover:ring-2 hover:ring-primary-500 cursor-pointer group ${category.aspect === 'video' ? 'w-80 aspect-video' : 'w-48 aspect-[2/3]'}`}
                                     >
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex flex-col justify-end p-4">
@@ -115,7 +118,7 @@ const Library = () => {
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        alert(`Playing ${item.title}...`);
+                                                        navigate(`/watch/${item.id}`);
                                                     }}
                                                     className="rounded-full bg-white p-2 text-black hover:scale-110 transition-transform"
                                                 >

@@ -61,16 +61,33 @@ export class MediaService implements OnModuleInit {
         // Enrich media with presigned URLs if they are from MinIO
         return Promise.all(medias.map(async (media) => {
             if (media.filePath.startsWith('minio:')) {
-                const url = await this.getPresignedUrl(media.filePath);
-                if (url) {
-                    // We can temporarily attach it or exposing a separate property
-                    // For now, let's keep it simple. Frontend might need a separate call for playback
-                    // But to make "poster" work if it was on minio, we'd need this.
-                    // For video playback, better to use a specific endpoint.
-                }
+                // Pre-generate URL for list view if needed, or just return basic info
+                // For list view we usually use poster/backdrop which are static URLs
             }
             return media;
         }));
+    }
+
+    async findOne(id: string): Promise<Media & { playbackUrl?: string }> {
+        const media = await this.mediaRepository.findOneBy({ id });
+        if (!media) return null;
+
+        const result: Media & { playbackUrl?: string } = { ...media };
+
+        if (media.filePath.startsWith('minio:')) {
+            const url = await this.getPresignedUrl(media.filePath);
+            if (url) {
+                result.playbackUrl = url;
+            }
+        } else {
+            // Local file serving via Nginx
+            // Assuming nginx maps /media/ to the volume where files are stored
+            // filePath: /app/media/Movie.mp4 -> /media/Movie.mp4
+            const fileName = path.basename(media.filePath);
+            result.playbackUrl = `/media/${encodeURIComponent(fileName)}`;
+        }
+
+        return result;
     }
 
     async getPresignedUrl(filePath: string): Promise<string | null> {

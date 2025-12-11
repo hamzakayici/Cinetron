@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { MediaService } from './media.service';
 import { Media } from './media.entity';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
@@ -13,6 +13,12 @@ export class MediaController {
     findAll(): Promise<Media[]> {
         console.log("Fetching all media items");
         return this.mediaService.findAll();
+    }
+
+    @Get(':id')
+    @ApiOperation({ summary: 'Get single media item with playback details' })
+    findOne(@Param('id') id: string): Promise<Media> {
+        return this.mediaService.findOne(id);
     }
 
     @Post('scan')
