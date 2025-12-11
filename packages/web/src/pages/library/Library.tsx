@@ -34,13 +34,15 @@ const Library = () => {
         { title: t('library.scifi'), aspect: "poster", items: [] }, // Placeholder
     ];
 
+    const heroItem = (mediaItems.length > 0 ? mediaItems[0] : HERO_MOVIE) as any;
+
     return (
         <div className="pb-20">
-            {/* Hero Section (Static for now) */}
+            {/* Hero Section */}
             <div className="relative h-[80vh] w-full overflow-hidden">
                 <div className="absolute inset-0">
                     <img
-                        src={HERO_MOVIE.backdrop}
+                        src={heroItem.backdropUrl || heroItem.backdrop || HERO_MOVIE.backdrop}
                         alt="Hero Backdrop"
                         className="h-full w-full object-cover object-top opacity-60"
                     />
@@ -54,7 +56,7 @@ const Library = () => {
                         animate={{ opacity: 1, y: 0 }}
                         className="mb-4 text-7xl font-black uppercase tracking-tighter text-white drop-shadow-2xl"
                     >
-                        {HERO_MOVIE.title}
+                        {heroItem.title}
                     </motion.h1>
                     <motion.p
                         initial={{ opacity: 0 }}
@@ -62,7 +64,7 @@ const Library = () => {
                         transition={{ delay: 0.2 }}
                         className="mb-8 max-w-2xl text-lg font-medium text-white/80 drop-shadow-md"
                     >
-                        {HERO_MOVIE.description}
+                        {heroItem.overview || HERO_MOVIE.description}
                     </motion.p>
 
                     <motion.div
@@ -72,14 +74,14 @@ const Library = () => {
                         className="flex items-center gap-4"
                     >
                         <button
-                            onClick={() => alert(`Playing ${HERO_MOVIE.title}... \n(Video Player coming soon!)`)}
+                            onClick={() => alert(`Playing ${heroItem.title}... \n(Video Player coming soon!)`)}
                             className="flex items-center gap-3 rounded-lg bg-white px-8 py-3 font-bold text-black hover:bg-white/90 transition-colors"
                         >
                             <Play fill="currentColor" size={24} />
                             {t('library.play')}
                         </button>
                         <button
-                            onClick={() => alert(HERO_MOVIE.description)}
+                            onClick={() => alert(heroItem.overview || heroItem.description || HERO_MOVIE.description)}
                             className="flex items-center gap-3 rounded-lg bg-white/20 px-8 py-3 font-bold text-white backdrop-blur-md hover:bg-white/30 transition-colors"
                         >
                             <Info size={24} />

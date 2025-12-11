@@ -216,24 +216,45 @@ export class MediaService implements OnModuleInit {
 
     private async scanMinio(): Promise<number> {
         return new Promise((resolve, reject) => {
-            if (!this.minioClient) return resolve(0);
+            if (!this.minioClient) {
+                this.logger.warn('MinIO client not initialized');
+                return resolve(0);
+            }
 
             const bucket = this.minioBucket;
+            this.logger.log(`Starting MinIO scan for bucket: ${bucket}`);
 
             // Re-implementing with async iterator for better control if minio supports it, 
             // otherwise collect list.
             const objects: any[] = [];
 
             const listStream = this.minioClient.listObjects(bucket, '', true);
-            listStream.on('data', (obj) => objects.push(obj));
-            listStream.on('error', (err) => reject(err));
+
+            listStream.on('data', (obj) => {
+                // this.logger.debug(`Found MinIO object: ${JSON.stringify(obj)}`);
+                objects.push(obj);
+            });
+
+            listStream.on('error', (err) => {
+                this.logger.error(`Error listing objects in bucket ${bucket}`, err);
+                reject(err);
+            });
+
             listStream.on('end', async () => {
+                this.logger.log(`MinIO list complete. Found ${objects.length} objects.`);
                 let added = 0;
                 for (const obj of objects) {
-                    const name = obj.name;
-                    if (!name) continue;
+                    const name = obj.name || obj.key; // Try both standard properties
+                    if (!name) {
+                        this.logger.warn(`Skipping object with no name: ${JSON.stringify(obj)}`);
+                        continue;
+                    }
+
                     const ext = path.extname(name).toLowerCase();
-                    if (!VIDEO_EXTENSIONS.includes(ext)) continue;
+                    if (!VIDEO_EXTENSIONS.includes(ext)) {
+                        // this.logger.debug(`Skipping non-video file: ${name}`);
+                        continue;
+                    }
 
                     const filePath = `minio:${bucket}:${name}`;
                     const exists = await this.mediaRepository.findOne({ where: { filePath } });
