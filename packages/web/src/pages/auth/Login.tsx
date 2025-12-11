@@ -2,17 +2,32 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import api from '../../services/api';
+import { Loader2 } from 'lucide-react';
 
 const Login = () => {
     const { t } = useTranslation();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('Login attempt', { email, password });
-        navigate('/library');
+        setIsLoading(true);
+        setError('');
+
+        try {
+            const response = await api.post('/auth/login', { email, password });
+            localStorage.setItem('token', response.data.access_token);
+            navigate('/library');
+        } catch (err: any) {
+            console.error('Login failed', err);
+            setError(t('login.invalidCredentials') || 'Invalid email or password');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -74,13 +89,20 @@ const Login = () => {
                                 </div>
                             </div>
 
+                            {error && (
+                                <div className="rounded-lg bg-red-500/10 p-3 text-center text-sm text-red-400 border border-red-500/20">
+                                    {error}
+                                </div>
+                            )}
+
                             <motion.button
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 type="submit"
-                                className="w-full rounded-lg bg-gradient-to-r from-primary-600 to-primary-800 px-4 py-3.5 font-bold text-white shadow-lg shadow-primary-900/40 transition-all hover:shadow-primary-900/60"
+                                disabled={isLoading}
+                                className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary-600 to-primary-800 px-4 py-3.5 font-bold text-white shadow-lg shadow-primary-900/40 transition-all hover:shadow-primary-900/60 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {t('login.submit')}
+                                {isLoading ? <Loader2 className="animate-spin" size={20} /> : t('login.submit')}
                             </motion.button>
                         </form>
                     </div>
