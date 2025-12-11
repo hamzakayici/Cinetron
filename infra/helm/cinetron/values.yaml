@@ -1,0 +1,56 @@
+global:
+  repository: ghcr.io/hamzakayici/cinetron
+  tag: latest
+
+server:
+  replicaCount: 1
+  image:
+    name: server
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 3000
+  env:
+    DB_HOST: "cinetron-postgres"
+    REDIS_HOST: "cinetron-redis"
+
+web:
+  replicaCount: 1
+  image:
+    name: web
+    pullPolicy: IfNotPresent
+  service:
+    type: NodePort
+    port: 80
+
+mediaEngine:
+  replicaCount: 1
+  image:
+    name: media-engine
+    pullPolicy: IfNotPresent
+  env:
+    REDIS_HOST: "cinetron-redis"
+
+workers:
+  replicaCount: 1
+  image:
+    name: workers
+    pullPolicy: IfNotPresent
+  env:
+    REDIS_HOST: "cinetron-redis"
+
+postgres:
+  enabled: true
+  auth:
+    database: cinetron_db
+    username: cinetron
+    password: cinetron_password
+
+redis:
+  enabled: true
+
+minio:
+  enabled: true
+  auth:
+    rootUser: minioadmin
+    rootPassword: minioadmin

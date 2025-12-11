@@ -1,0 +1,9 @@
+{
+    "name": "cinetron-sample-plugin",
+    "version": "1.0.0",
+    "description": "A sample plugin for Cinetron",
+    "main": "index.js",
+    "dependencies": {
+        "@cinetron/plugin-api": "workspace:*"
+    }
+}
