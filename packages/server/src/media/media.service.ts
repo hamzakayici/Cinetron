@@ -190,9 +190,14 @@ export class MediaService implements OnModuleInit {
                         const { title, year } = this.parseFileName(fileName);
 
                         const newMedia = this.mediaRepository.create({
-                            title, year, filePath, originalFileName: name, type: 'movie',
+                            title,
+                            year,
+                            filePath,
+                            originalFileName: name,
+                            type: 'movie',
                             posterUrl: `https://placehold.co/400x600/1a1a1a/ffffff?text=${encodeURIComponent(title)}`,
-                            overview: `Auto-detected from MinIO: ${fileName}`, processed: true
+                            overview: '', // Leave empty, will be filled by metadata worker
+                            processed: true
                         });
                         const savedMedia = await this.mediaRepository.save(newMedia);
 

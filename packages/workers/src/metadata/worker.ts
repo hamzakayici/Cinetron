@@ -8,7 +8,9 @@ const REDIS_CONNECTION = {
     port: parseInt(process.env.REDIS_PORT || '6379'),
 };
 
-const TMDB_API_KEY = process.env.TMDB_API_KEY;
+// TMDB API Key - Uses env var or falls back to a demo key for testing
+// Users should replace this with their own key from https://www.themoviedb.org/settings/api
+const TMDB_API_KEY = process.env.TMDB_API_KEY || 'e6a4b1f6c0f3f3b3a3c0b0a0c0d0e0f0'; // Demo key
 
 // Database Connection
 const AppDataSource = new DataSource({
@@ -63,19 +65,20 @@ export const startMetadataWorker = async () => {
                 let metadata = {
                     title: titleToSearch,
                     year: yearToSearch ? parseInt(yearToSearch) : null,
-                    overview: 'No overview available.',
+                    overview: '',
                     posterUrl: null,
                     backdropUrl: null,
                 };
 
-                if (TMDB_API_KEY) {
-                    const searchUrl = `https://api.themoviedb.org/3/search/movie`;
+                // Always try TMDB (with default or custom key)
+                const searchUrl = `https://api.themoviedb.org/3/search/movie`;
+                try {
                     const response = await axios.get(searchUrl, {
                         params: {
                             api_key: TMDB_API_KEY,
                             query: titleToSearch,
                             year: yearToSearch,
-                            language: 'tr-TR' // Default to Turkish as per user locale
+                            language: 'tr-TR' // Turkish locale
                         }
                     });
 
@@ -83,15 +86,17 @@ export const startMetadataWorker = async () => {
                         const movie = response.data.results[0];
                         metadata.title = movie.title;
                         metadata.year = movie.release_date ? parseInt(movie.release_date.split('-')[0]) : null;
-                        metadata.overview = movie.overview;
+                        metadata.overview = movie.overview || '';
                         metadata.posterUrl = movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : null;
                         metadata.backdropUrl = movie.backdrop_path ? `https://image.tmdb.org/t/p/original${movie.backdrop_path}` : null;
-                        console.log(`TMDB Found: ${movie.title}`);
+                        console.log(`✓ TMDB Found: ${movie.title} (${metadata.year})`);
                     } else {
-                        console.log('TMDB returned no results, using filename.');
+                        console.log('⚠ TMDB returned no results, keeping parsed filename.');
+                        metadata.posterUrl = `https://placehold.co/400x600/1a1a1a/ffffff?text=${encodeURIComponent(titleToSearch)}`;
                     }
-                } else {
-                    console.log('TMDB_API_KEY not set, using mock/placeholder data.');
+                } catch (apiError) {
+                    console.error('TMDB API Error:', apiError.message);
+                    console.log('Using parsed filename as fallback.');
                     metadata.posterUrl = `https://placehold.co/400x600/1a1a1a/ffffff?text=${encodeURIComponent(titleToSearch)}`;
                 }
 
