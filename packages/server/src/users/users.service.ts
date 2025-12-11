@@ -11,7 +11,7 @@ export class UsersService {
     ) { }
 
     async findOne(email: string): Promise<User | undefined> {
-        return this.usersRepository.findOneBy({ email });
+        return this.usersRepository.findOneBy({ email: email.toLowerCase() });
     }
 
     async findById(id: string): Promise<User | undefined> {
