@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutGrid, Settings, LogOut, Film, Search, Bell } from 'lucide-react';
+import { LayoutGrid, Settings, LogOut, Film } from 'lucide-react';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
 
