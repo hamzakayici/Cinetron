@@ -6,7 +6,7 @@ export interface Media {
     backdropUrl?: string;
     overview?: string;
     filePath: string;
-    type: 'movie' | 'tv';
+    type: 'movie' | 'tv' | 'series';
 }
 
 const API_URL = import.meta.env.VITE_API_URL || '';

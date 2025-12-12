@@ -1,26 +1,34 @@
-import { useNavigate } from 'react-router-dom';
-import { List } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { getFavorites } from '../../services/api';
+import { type Media } from '../../services/media';
+import MediaCard from '../../components/media/MediaCard';
 
 const MyList = () => {
-    const navigate = useNavigate();
+    const [favorites, setFavorites] = useState<Media[]>([]);
+
+    useEffect(() => {
+        const fetchFavorites = async () => {
+            try {
+                const res = await getFavorites();
+                setFavorites(res.data);
+            } catch (err) {
+                console.error("Failed to fetch favorites", err);
+            }
+        };
+        fetchFavorites();
+    }, []);
 
     return (
-        <div className="min-h-screen bg-background p-8">
-            <div className="max-w-4xl mx-auto text-center mt-20">
-                <div className="w-24 h-24 bg-primary-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <List size={48} className="text-primary-400" />
-                </div>
-                <h1 className="text-5xl font-black mb-4 text-white">My List</h1>
-                <p className="text-xl text-white/60 mb-8">
-                    Personal list feature coming soon. Bookmark your favorite content.
-                </p>
-                <button
-                    onClick={() => navigate('/library')}
-                    className="px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-lg transition"
-                >
-                    Go to Library
-                </button>
+        <div className="min-h-screen bg-background p-8 pb-32">
+            <h1 className="text-4xl font-bold mb-8 text-white">My List</h1>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                {favorites.map(item => (
+                    <MediaCard key={item.id} media={item} />
+                ))}
             </div>
+            {favorites.length === 0 && (
+                <div className="text-center text-white/50 mt-20">Your list is empty. Add movies and series to watch later.</div>
+            )}
         </div>
     );
 };

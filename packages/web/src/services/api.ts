@@ -9,6 +9,7 @@ const api = axios.create({
     },
 });
 
+// This will be determined after viewing the file
 // Add a request interceptor to include the auth token
 api.interceptors.request.use((config) => {
     const token = localStorage.getItem('token');
@@ -34,5 +35,19 @@ api.interceptors.response.use((response) => {
     }
     return Promise.reject(error);
 });
+
+// Define API methods
+export const getMedia = () => api.get<any[]>('/media');
+export const getMediaDetail = (id: string) => api.get<any>(`/media/${id}`);
+
+// History & Favorites
+export const getHistory = () => api.get<any[]>('/media/user/history');
+export const getFavorites = () => api.get<any[]>('/media/user/favorites');
+export const addFavorite = (id: string) => api.post(`/media/${id}/favorite`);
+export const removeFavorite = (id: string) => api.delete(`/media/${id}/favorite`);
+export const checkFavorite = (id: string) => api.get<{ isFavorite: boolean }>(`/media/${id}/favorite`);
+
+// System
+export const getSystemStats = () => api.get('/system/stats');
 
 export default api;

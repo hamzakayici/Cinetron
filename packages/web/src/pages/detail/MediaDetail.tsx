@@ -1,22 +1,44 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Play, ArrowLeft, Plus, ThumbsUp } from 'lucide-react';
+import { Play, ArrowLeft, Plus, ThumbsUp, Check } from 'lucide-react';
 import { getMediaById, type Media } from '../../services/media';
+import { addFavorite, removeFavorite, checkFavorite } from '../../services/api';
 
 const MediaDetail = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const [media, setMedia] = useState<Media | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isFavorite, setIsFavorite] = useState(false);
 
     useEffect(() => {
         if (!id) return;
+
         getMediaById(id)
             .then(setMedia)
             .catch(console.error)
             .finally(() => setLoading(false));
+
+        checkFavorite(id)
+            .then(res => setIsFavorite(res.data.isFavorite))
+            .catch(console.error);
     }, [id]);
+
+    const toggleFavorite = async () => {
+        if (!media) return;
+        try {
+            if (isFavorite) {
+                await removeFavorite(media.id);
+                setIsFavorite(false);
+            } else {
+                await addFavorite(media.id);
+                setIsFavorite(true);
+            }
+        } catch (err) {
+            console.error("Failed to toggle favorite", err);
+        }
+    };
 
     if (loading) {
         return <div className="flex h-screen items-center justify-center bg-background text-white">Loading...</div>;
@@ -77,8 +99,14 @@ const MediaDetail = () => {
                             Oynat
                         </button>
 
-                        <button className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-white/30 bg-black/30 backdrop-blur-sm transition-colors hover:border-white hover:bg-white/10">
-                            <Plus size={24} />
+                        <button
+                            onClick={toggleFavorite}
+                            className={`flex h-14 w-14 items-center justify-center rounded-full border-2 transition-colors ${isFavorite
+                                ? 'bg-white border-white text-black'
+                                : 'border-white/30 bg-black/30 backdrop-blur-sm hover:border-white hover:bg-white/10'
+                                }`}
+                        >
+                            {isFavorite ? <Check size={24} /> : <Plus size={24} />}
                         </button>
 
                         <button className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-white/30 bg-black/30 backdrop-blur-sm transition-colors hover:border-white hover:bg-white/10">

@@ -1,25 +1,74 @@
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { Search } from 'lucide-react';
+import { getMedia, type Media } from '../../services/media';
+import MediaCard from '../../components/media/MediaCard';
 
 const SearchPage = () => {
-    const navigate = useNavigate();
+    const [query, setQuery] = useState('');
+    const [allMedia, setAllMedia] = useState<Media[]>([]);
+    const [results, setResults] = useState<Media[]>([]);
+
+    useEffect(() => {
+        const fetchMedia = async () => {
+            try {
+                const media = await getMedia();
+                setAllMedia(media);
+            } catch (err) {
+                console.error("Failed to fetch media for search", err);
+            }
+        };
+        fetchMedia();
+    }, []);
+
+    useEffect(() => {
+        if (!query.trim()) {
+            setResults([]);
+            return;
+        }
+
+        const q = query.toLowerCase();
+        const filtered = allMedia.filter(m =>
+            m.title.toLowerCase().includes(q) ||
+            (m.overview && m.overview.toLowerCase().includes(q))
+        );
+        setResults(filtered);
+    }, [query, allMedia]);
 
     return (
-        <div className="min-h-screen bg-background p-8">
-            <div className="max-w-4xl mx-auto text-center mt-20">
-                <div className="w-24 h-24 bg-primary-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <Search size={48} className="text-primary-400" />
+        <div className="min-h-screen bg-background p-8 pb-32">
+            <div className="max-w-4xl mx-auto">
+                <div className="relative mb-12 mt-8">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <Search className="text-white/50" size={24} />
+                    </div>
+                    <input
+                        type="text"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder="Search for movies, series..."
+                        className="w-full bg-surface/50 border border-white/10 rounded-full py-4 pl-14 pr-6 text-xl text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-surface transition-all"
+                        autoFocus
+                    />
                 </div>
-                <h1 className="text-5xl font-black mb-4 text-white">Search</h1>
-                <p className="text-xl text-white/60 mb-8">
-                    Search feature coming soon. For now, browse all content in the Library.
-                </p>
-                <button
-                    onClick={() => navigate('/library')}
-                    className="px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-lg transition"
-                >
-                    Go to Library
-                </button>
+
+                {query && (
+                    <div className="mb-4 text-white/50">
+                        Found {results.length} result{results.length !== 1 ? 's' : ''} for "{query}"
+                    </div>
+                )}
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    {results.map(item => (
+                        <MediaCard key={item.id} media={item} />
+                    ))}
+                </div>
+
+                {!query && (
+                    <div className="text-center text-white/30 mt-20">
+                        <Search className="mx-auto mb-4 opacity-50" size={48} />
+                        <p className="text-xl">Type to start searching</p>
+                    </div>
+                )}
             </div>
         </div>
     );

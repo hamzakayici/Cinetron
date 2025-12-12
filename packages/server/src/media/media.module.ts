@@ -3,20 +3,22 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { MediaController } from './media.controller';
 import { MediaService } from './media.service';
 import { Media } from './media.entity';
+import { WatchHistory } from './watch-history.entity';
+import { Favorite } from '../users/favorite.entity';
 
 import { BullModule } from '@nestjs/bullmq';
+import { TmdbService } from './tmdb.service';
 
-import { WatchHistory } from './watch-history.entity';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Media, WatchHistory]),
+        TypeOrmModule.forFeature([Media, WatchHistory, Favorite]),
         BullModule.registerQueue({
-            name: 'metadata-queue',
+            name: 'media',
         }),
     ],
     controllers: [MediaController],
-    providers: [MediaService],
+    providers: [MediaService, TmdbService],
     exports: [MediaService],
 })
 export class MediaModule { }

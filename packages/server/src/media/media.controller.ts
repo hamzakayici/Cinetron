@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, Request, Delete } from '@nestjs/common';
 import { MediaService } from './media.service';
 import { Media } from './media.entity';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
@@ -21,10 +21,10 @@ export class MediaController {
         return this.mediaService.findOne(id);
     }
 
-    @Post('scan')
+    @Get('scan')
     @ApiOperation({ summary: 'Trigger directory scan for new media' })
-    scanLibrary(): Promise<{ message: string, added: number, details?: any }> {
-        return this.mediaService.scanDirectory();
+    async scanLibrary() {
+        return this.mediaService.scanLibrary();
     }
 
     @ApiBearerAuth()
@@ -42,5 +42,45 @@ export class MediaController {
     async getProgress(@Param('id') id: string, @Request() req) {
         const progress = await this.mediaService.getProgress(req.user.userId, id);
         return { progress };
+    }
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard('jwt'))
+    @Get('/user/history')
+    @ApiOperation({ summary: 'Get user watch history' })
+    getHistory(@Request() req) {
+        return this.mediaService.getHistory(req.user.userId);
+    }
+
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard('jwt'))
+    @Get('/user/favorites')
+    @ApiOperation({ summary: 'Get user favorites' })
+    getFavorites(@Request() req) {
+        return this.mediaService.getFavorites(req.user.userId);
+    }
+
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard('jwt'))
+    @Post(':id/favorite')
+    @ApiOperation({ summary: 'Add media to favorites' })
+    addFavorite(@Param('id') id: string, @Request() req) {
+        return this.mediaService.addFavorite(req.user.userId, id);
+    }
+
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard('jwt'))
+    @Delete(':id/favorite')
+    @ApiOperation({ summary: 'Remove media from favorites' })
+    removeFavorite(@Param('id') id: string, @Request() req) {
+        return this.mediaService.removeFavorite(req.user.userId, id);
+    }
+
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard('jwt'))
+    @Get(':id/favorite')
+    @ApiOperation({ summary: 'Check if media is in favorites' })
+    async checkFavorite(@Param('id') id: string, @Request() req) {
+        const isFavorite = await this.mediaService.checkFavorite(req.user.userId, id);
+        return { isFavorite };
     }
 }

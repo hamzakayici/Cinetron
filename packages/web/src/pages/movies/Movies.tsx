@@ -1,26 +1,33 @@
-import { useNavigate } from 'react-router-dom';
-import { Film } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { getMedia, type Media } from '../../services/media';
+import MediaCard from '../../components/media/MediaCard';
 
 const Movies = () => {
-    const navigate = useNavigate();
+    const [movies, setMovies] = useState<Media[]>([]);
+
+    useEffect(() => {
+        const fetchMovies = async () => {
+            try {
+                const allMedia = await getMedia();
+                setMovies(allMedia.filter(m => m.type === 'movie' || !m.type)); // Default to movie if type missing
+            } catch (err) {
+                console.error("Failed to fetch movies", err);
+            }
+        };
+        fetchMovies();
+    }, []);
 
     return (
-        <div className="min-h-screen bg-background p-8">
-            <div className="max-w-4xl mx-auto text-center mt-20">
-                <div className="w-24 h-24 bg-primary-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <Film size={48} className="text-primary-400" />
-                </div>
-                <h1 className="text-5xl font-black mb-4 text-white">Movies</h1>
-                <p className="text-xl text-white/60 mb-8">
-                    Movie filtering feature coming soon. For now, all content is shown in the Library.
-                </p>
-                <button
-                    onClick={() => navigate('/library')}
-                    className="px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-lg transition"
-                >
-                    Go to Library
-                </button>
+        <div className="min-h-screen bg-background p-8 pb-32">
+            <h1 className="text-4xl font-bold mb-8 text-white">Movies</h1>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                {movies.map(movie => (
+                    <MediaCard key={movie.id} media={movie} />
+                ))}
             </div>
+            {movies.length === 0 && (
+                <div className="text-center text-white/50 mt-20">No movies found in library.</div>
+            )}
         </div>
     );
 };

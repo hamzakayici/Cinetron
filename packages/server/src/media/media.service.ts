@@ -3,15 +3,17 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
-import { Media } from './media.entity';
-import * as fs from 'fs';
-import * as path from 'path';
 import * as Minio from 'minio';
+import * as path from 'path';
+import * as fs from 'fs';
+import { TmdbService } from './tmdb.service';
+import { Media } from './media.entity';
 
 // Define supported video extensions
 const VIDEO_EXTENSIONS = ['.mp4', '.mkv', '.avi', '.mov', '.webm'];
 
 import { WatchHistory } from './watch-history.entity';
+import { Favorite } from '../users/favorite.entity';
 
 @Injectable()
 export class MediaService implements OnModuleInit {
@@ -20,15 +22,19 @@ export class MediaService implements OnModuleInit {
     private readonly mediaPath = process.env.MEDIA_PATH || '/app/media';
 
     // MinIO Configuration
-    private minioClient: Minio.Client | null = null;
-    private readonly minioBucket = process.env.MINIO_BUCKET || 'filmler';
+    private minioClient: Minio.Client;
+    private publicMinioClient: Minio.Client; // Used for generating presigned URLs with external host
+    private readonly minioBucket = process.env.MINIO_BUCKET || 'default';
 
     constructor(
         @InjectRepository(Media)
         private mediaRepository: Repository<Media>,
         @InjectRepository(WatchHistory)
         private historyRepository: Repository<WatchHistory>,
-        @InjectQueue('metadata-queue') private metadataQueue: Queue,
+        @InjectRepository(Favorite)
+        private favoriteRepository: Repository<Favorite>,
+        @InjectQueue('media') private mediaQueue: Queue,
+        private readonly tmdbService: TmdbService,
     ) {
         this.initializeMinio();
     }
@@ -49,6 +55,28 @@ export class MediaService implements OnModuleInit {
                 accessKey,
                 secretKey,
             });
+
+            // Initialize Public Client (Signer)
+            // Parses MINIO_EXTERNAL_URL to config (e.g., http://localhost:9000 -> endPoint: localhost, port: 9000)
+            const externalUrlStr = process.env.MINIO_EXTERNAL_URL || 'http://localhost:9000';
+            try {
+                // Handle cases where external URL might not have protocol for legacy reasons, though we default to http://
+                const urlWithProto = externalUrlStr.includes('://') ? externalUrlStr : `http://${externalUrlStr}`;
+                const parsedUrl = new URL(urlWithProto);
+
+                this.publicMinioClient = new Minio.Client({
+                    endPoint: parsedUrl.hostname,
+                    port: parseInt(parsedUrl.port || (parsedUrl.protocol === 'https:' ? '443' : '80')),
+                    useSSL: parsedUrl.protocol === 'https:',
+                    accessKey,
+                    secretKey,
+                });
+                this.logger.log(`MinIO Public Signer initialized for: ${parsedUrl.hostname}:${parsedUrl.port}`);
+            } catch (e) {
+                this.logger.warn(`Failed to initialize public MinIO signer from ${externalUrlStr}, falling back to internal`, e);
+                this.publicMinioClient = this.minioClient;
+            }
+
             this.logger.log(`MinIO Client initialized for endpoint: ${endPoint}:${port}`);
         } catch (err) {
             this.logger.error('Failed to initialize MinIO Client', err);
@@ -115,22 +143,14 @@ export class MediaService implements OnModuleInit {
             const bucket = parts[1];
             const objectName = parts.slice(2).join(':');
 
-            let presignedUrl = await this.minioClient.presignedGetObject(bucket, objectName, 3 * 60 * 60);
-
-            // CRITICAL FIX: Replace internal docker hostname with localhost for browser access
-            // MinIO generates URLs with internal hostname (e.g., "minio:9000") which browsers can't reach
-            // We need to replace it with the externally accessible URL
-            const minioInternalHost = process.env.MINIO_ENDPOINT || 'minio';
-            const minioPort = process.env.MINIO_API_PORT || '9000';
-            const minioExternalUrl = process.env.MINIO_EXTERNAL_URL || `http://localhost:${minioPort}`;
-
-            // Replace the internal hostname in the URL with the external one
-            presignedUrl = presignedUrl.replace(`${minioInternalHost}:${minioPort}`, minioExternalUrl.replace(/^https?:\/\//, ''));
-
-            this.logger.log(`Generated presigned URL for ${objectName}: ${presignedUrl.substring(0, 100)}...`);
-            return presignedUrl;
-        } catch (err) {
-            this.logger.error(`Failed to generate presigned URL for ${filePath}`, err);
+            // Use the PUBLIC client to generate the URL
+            // This ensures the signature is calculated for the external host ("localhost")
+            // and the URL itself points to the external host.
+            // No string replacement needed.
+            const url = await this.publicMinioClient.presignedGetObject(bucket, objectName, 3 * 60 * 60);
+            return url;
+        } catch (error) {
+            this.logger.error(`Failed to get presigned URL for ${filePath}:`, error);
             return null;
         }
     }
@@ -140,7 +160,46 @@ export class MediaService implements OnModuleInit {
         // This function is kept to satisfy potential calls but does nothing
     }
 
-    async scanDirectory(): Promise<{ message: string, added: number, details?: any }> {
+    /**
+     * Enhances media with metadata from TMDB
+     * This is a utility method that can be called during scanning or manually
+     */
+    async enhanceMediaMetadata(media: Media): Promise<Media> {
+        try {
+            if (media.type === 'movie') {
+                const results = await this.tmdbService.searchMovie(media.title, media.year);
+                if (results && results.length > 0) {
+                    const match = results[0];
+                    const details = await this.tmdbService.getMovieDetails(match.id);
+                    if (details) {
+                        media.overview = details.overview;
+                        media.posterUrl = `https://image.tmdb.org/t/p/w500${details.poster_path}`;
+                        media.backdropUrl = `https://image.tmdb.org/t/p/original${details.backdrop_path}`;
+                        await this.mediaRepository.save(media);
+                        this.logger.log(`Enhanced metadata for movie: ${media.title}`);
+                    }
+                }
+            } else if (media.type === 'tv' || media.type === 'series') {
+                const results = await this.tmdbService.searchTvShow(media.title, media.year);
+                if (results && results.length > 0) {
+                    const match = results[0];
+                    const details = await this.tmdbService.getTvShowDetails(match.id);
+                    if (details) {
+                        media.overview = details.overview;
+                        media.posterUrl = `https://image.tmdb.org/t/p/w500${details.poster_path}`;
+                        media.backdropUrl = `https://image.tmdb.org/t/p/original${details.backdrop_path}`;
+                        await this.mediaRepository.save(media);
+                        this.logger.log(`Enhanced metadata for series: ${media.title}`);
+                    }
+                }
+            }
+        } catch (error) {
+            this.logger.error(`Failed to enhance metadata for ${media.title}`, error);
+        }
+        return media;
+    }
+
+    async scanLibrary(): Promise<{ message: string, added: number, details?: any }> {
         let addedCount = 0;
         let messages = [];
 
@@ -214,12 +273,9 @@ export class MediaService implements OnModuleInit {
                         });
                         const savedMedia = await this.mediaRepository.save(newMedia);
 
-                        // Dispatch metadata job
-                        await this.metadataQueue.add('fetch-metadata', {
-                            mediaId: savedMedia.id,
-                            filename: name,
-                            filePath: filePath,
-                        });
+                        if (savedMedia) {
+                            await this.mediaQueue.add('enhance', { mediaId: savedMedia.id });
+                        }
                         this.logger.log(`Dispatched metadata job for: ${name}`);
 
                         added++;
@@ -287,28 +343,65 @@ export class MediaService implements OnModuleInit {
         return { title, year };
     }
 
-    async saveProgress(userId: string, mediaId: string, progressSeconds: number) {
-        let history = await this.historyRepository.findOne({
-            where: { userId, mediaId }
-        });
-
-        if (!history) {
-            history = this.historyRepository.create({
-                userId,
-                mediaId,
-                progressSeconds
-            });
-        } else {
-            history.progressSeconds = progressSeconds;
-        }
-
-        return this.historyRepository.save(history);
-    }
-
     async getProgress(userId: string, mediaId: string): Promise<number> {
         const history = await this.historyRepository.findOne({
             where: { userId, mediaId }
         });
         return history ? history.progressSeconds : 0;
+    }
+
+    async saveProgress(userId: string, mediaId: string, progressSeconds: number) {
+        let history = await this.historyRepository.findOne({
+            where: { userId, mediaId }
+        });
+
+        if (history) {
+            history.progressSeconds = progressSeconds;
+            history.lastWatchedAt = new Date();
+        } else {
+            history = this.historyRepository.create({
+                userId,
+                mediaId,
+                progressSeconds,
+                lastWatchedAt: new Date()
+            });
+        }
+        return this.historyRepository.save(history);
+    }
+
+    async getHistory(userId: string): Promise<Media[]> {
+        const history = await this.historyRepository.find({
+            where: { userId },
+            relations: ['media'],
+            order: { lastWatchedAt: 'DESC' },
+            take: 50 // Limit history
+        });
+        return history.map(h => h.media).filter(m => !!m);
+    }
+
+    async getFavorites(userId: string): Promise<Media[]> {
+        const favorites = await this.favoriteRepository.find({
+            where: { userId },
+            relations: ['media'],
+            order: { createdAt: 'DESC' }
+        });
+        return favorites.map(f => f.media).filter(f => !!f);
+    }
+
+    async addFavorite(userId: string, mediaId: string) {
+        const exists = await this.favoriteRepository.findOne({ where: { userId, mediaId } });
+        if (exists) return exists;
+
+        const fav = this.favoriteRepository.create({ userId, mediaId });
+        return this.favoriteRepository.save(fav);
+    }
+
+    async removeFavorite(userId: string, mediaId: string) {
+        return this.favoriteRepository.delete({ userId, mediaId });
+    }
+
+    async checkFavorite(userId: string, mediaId: string): Promise<boolean> {
+        const count = await this.favoriteRepository.count({ where: { userId, mediaId } });
+        return count > 0;
     }
 }
