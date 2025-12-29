@@ -2,9 +2,8 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
-// Use local network IP for Android (works for both emulator and physical devices on same network)
-const DEFAULT_HOST = Platform.OS === 'android' ? '10.187.18.171' : 'localhost';
-export const DEFAULT_API_URL = `http://${DEFAULT_HOST}:3000/api`;
+// Use production backend
+export const DEFAULT_API_URL = 'https://media.hazelify.com/api';
 
 const api = axios.create({
     baseURL: DEFAULT_API_URL,
