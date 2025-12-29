@@ -4,6 +4,7 @@ import { RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
 import { scanLibrary } from '../../services/media';
 import api from '../../services/api';
 import { useTranslation } from 'react-i18next';
+import MediaManagement from '../../components/admin/MediaManagement';
 
 const Admin = () => {
     const [scanning, setScanning] = useState(false);
@@ -11,7 +12,7 @@ const Admin = () => {
     const [error, setError] = useState<string | null>(null);
 
     const { t } = useTranslation();
-    const [activeTab, setActiveTab] = useState<'library' | 'users'>('library');
+    const [activeTab, setActiveTab] = useState<'media' | 'library' | 'users'>('media');
     const [showUserModal, setShowUserModal] = useState(false);
     const [newUser, setNewUser] = useState({ email: '', password: '', role: 'viewer' });
 
@@ -66,6 +67,12 @@ const Admin = () => {
             {/* Tabs */}
             <div className="flex gap-4 mb-8 border-b border-white/10">
                 <button
+                    onClick={() => setActiveTab('media')}
+                    className={`pb-4 px-2 font-medium transition-colors ${activeTab === 'media' ? 'text-primary-500 border-b-2 border-primary-500' : 'text-white/60 hover:text-white'}`}
+                >
+                    Media
+                </button>
+                <button
                     onClick={() => setActiveTab('library')}
                     className={`pb-4 px-2 font-medium transition-colors ${activeTab === 'library' ? 'text-primary-500 border-b-2 border-primary-500' : 'text-white/60 hover:text-white'}`}
                 >
@@ -78,6 +85,8 @@ const Admin = () => {
                     Users
                 </button>
             </div>
+
+            {activeTab === 'media' && <MediaManagement />}
 
             {activeTab === 'library' && (
                 <div className="bg-surface rounded-xl p-6 border border-white/5">

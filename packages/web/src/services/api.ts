@@ -47,7 +47,36 @@ export const addFavorite = (id: string) => api.post(`/media/${id}/favorite`);
 export const removeFavorite = (id: string) => api.delete(`/media/${id}/favorite`);
 export const checkFavorite = (id: string) => api.get<{ isFavorite: boolean }>(`/media/${id}/favorite`);
 
+// Admin - Media Management
+export const createMedia = (formData: FormData) => {
+    return api.post('/media', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    });
+};
+
+export const updateMedia = (id: string, formData: FormData) => {
+    return api.put(`/media/${id}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    });
+};
+
+export const deleteMedia = (id: string) => api.delete(`/media/${id}`);
+
+// Admin - Subtitle Management
+export const getSubtitles = (mediaId: string) => api.get(`/media/${mediaId}/subtitles`);
+
+export const uploadSubtitle = (mediaId: string, formData: FormData) => {
+    return api.post(`/media/${mediaId}/subtitles`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    });
+};
+
+export const deleteSubtitle = (mediaId: string, subtitleId: string) => {
+    return api.delete(`/media/${mediaId}/subtitles/${subtitleId}`);
+};
+
 // System
 export const getSystemStats = () => api.get('/system/stats');
 
 export default api;
+
