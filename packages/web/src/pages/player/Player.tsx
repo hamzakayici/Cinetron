@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, Play, Pause, RotateCcw, Volume2, VolumeX, Maximize } from 'lucide-react';
+import { ArrowLeft, Loader2, Play, Pause, RotateCcw, Volume2, VolumeX, Maximize, Subtitles as SubtitlesIcon, Check } from 'lucide-react';
 import api from '../../services/api';
 import { type Media, saveProgress, getProgress } from '../../services/media';
+import { getSubtitles } from '../../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Player = () => {
@@ -23,21 +24,33 @@ const Player = () => {
     const [showControls, setShowControls] = useState(false);
     const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+    // Subtitle State
+    const [subtitles, setSubtitles] = useState<any[]>([]);
+    const [activeSubtitle, setActiveSubtitle] = useState<string | null>(null); // null = off
+    const [showSubtitleMenu, setShowSubtitleMenu] = useState(false);
+
     useEffect(() => {
         const fetchData = async () => {
             if (!id) return;
             try {
-                const [mediaRes, progress] = await Promise.all([
+                const [mediaRes, progress, subRes] = await Promise.all([
                     api.get(`/media/${id}`),
-                    getProgress(id)
+                    getProgress(id),
+                    getSubtitles(id as string) // Fetch subtitles
                 ]);
                 setMedia(mediaRes.data);
+                setSubtitles(subRes.data);
+                
                 if (progress > 10) { // Only prompt if watched more than 10 seconds
                     setInitialProgress(progress);
                     setShowResumePrompt(true);
                 }
+                
+                // Auto-select first subtitle if available (optional preference)
+                // if (subRes.data.length > 0) setActiveSubtitle(subRes.data[0].id);
+
             } catch (err) {
-                console.error("Failed to load media or progress", err);
+                console.error("Failed to load media details", err);
             } finally {
                 setIsLoading(false);
             }
@@ -54,6 +67,24 @@ const Player = () => {
 
         return () => clearInterval(interval);
     }, [id]);
+
+    // Handle subtitle track switching
+    useEffect(() => {
+        if (!videoRef.current) return;
+        
+        // Loop through all text tracks and set mode
+        for (let i = 0; i < videoRef.current.textTracks.length; i++) {
+            const track = videoRef.current.textTracks[i];
+            // Match by language (our ID is stored in language for uniqueness hack, or we rely on label)
+            // Ideally we match by label since track.id might not be reliable across browsers
+            if (activeSubtitle && track.label === subtitles.find(s => s.id === activeSubtitle)?.label) {
+                track.mode = 'showing';
+            } else {
+                track.mode = 'hidden';
+            }
+        }
+    }, [activeSubtitle, subtitles]);
+
 
     const handleResume = () => {
         if (videoRef.current) {
@@ -82,7 +113,9 @@ const Player = () => {
     const handleMouseMove = () => {
         setShowControls(true);
         if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
-        controlsTimeoutRef.current = setTimeout(() => setShowControls(false), 3000);
+        controlsTimeoutRef.current = setTimeout(() => {
+            if (!showSubtitleMenu) setShowControls(false); // keep controls if menu open
+        }, 3000);
     };
 
     const formatTime = (time: number) => {
@@ -99,6 +132,7 @@ const Player = () => {
             className={`relative h-screen w-full bg-black overflow-hidden group ${showControls ? 'cursor-default' : 'cursor-none'}`}
             onMouseMove={handleMouseMove}
             onMouseLeave={() => setShowControls(false)}
+            onClick={() => { if(showSubtitleMenu) setShowSubtitleMenu(false); }}
         >
             {/* Resume Prompt Modal */}
             <AnimatePresence>
@@ -119,7 +153,7 @@ const Player = () => {
                 )}
             </AnimatePresence>
 
-            <div className="absolute top-6 left-6 z-40">
+            <div className={`absolute top-6 left-6 z-40 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0'}`}>
                 <button onClick={() => navigate(-1)} className="p-3 bg-black/50 rounded-full hover:bg-white/20 transition text-white">
                     <ArrowLeft />
                 </button>
@@ -133,8 +167,20 @@ const Player = () => {
                 onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
                 onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}
-                onClick={togglePlay}
-            />
+                onClick={(e) => { e.stopPropagation(); togglePlay(); }}
+                crossOrigin="anonymous" // Important for loading subtitles from different origin
+            >
+                {subtitles.map(sub => (
+                    <track
+                        key={sub.id}
+                        kind="subtitles"
+                        src={sub.url}
+                        srcLang={sub.language}
+                        label={sub.label}
+                        default={sub.id === activeSubtitle}
+                    />
+                ))}
+            </video>
 
             {/* Custom Controls Overlay */}
             <AnimatePresence>
@@ -144,9 +190,10 @@ const Player = () => {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 50 }}
                         className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/90 to-transparent z-40"
+                        onClick={e => e.stopPropagation()} // Prevent clicking background click handler
                     >
                         {/* Progress Bar */}
-                        <div className="w-full h-1 bg-white/20 rounded-full mb-4 cursor-pointer" onClick={(e) => {
+                        <div className="w-full h-1 bg-white/20 rounded-full mb-4 cursor-pointer group/progress" onClick={(e) => {
                             const rect = e.currentTarget.getBoundingClientRect();
                             const pos = (e.clientX - rect.left) / rect.width;
                             if (videoRef.current) videoRef.current.currentTime = pos * duration;
@@ -155,7 +202,7 @@ const Player = () => {
                                 className="h-full bg-primary-500 rounded-full relative"
                                 style={{ width: `${(currentTime / duration) * 100}%` }}
                             >
-                                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-primary-500 rounded-full scale-0 group-hover:scale-100 transition-transform" />
+                                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-primary-500 rounded-full scale-0 group-hover/progress:scale-100 transition-transform" />
                             </div>
                         </div>
 
@@ -193,7 +240,58 @@ const Player = () => {
                             </div>
 
                             <div className="flex items-center gap-4">
-                                <h3 className="text-lg font-bold truncate max-w-md">{media.title}</h3>
+                                <h3 className="text-lg font-bold truncate max-w-sm hidden md:block">{media.title}</h3>
+                                
+                                {/* Subtitle Button & Menu */}
+                                <div className="relative">
+                                    <button 
+                                        onClick={() => setShowSubtitleMenu(!showSubtitleMenu)} 
+                                        className={`transition ${activeSubtitle ? 'text-primary-500' : 'text-white hover:text-primary-500'}`}
+                                        title="Subtitles"
+                                    >
+                                        <SubtitlesIcon size={24} />
+                                    </button>
+                                    
+                                    <AnimatePresence>
+                                    {showSubtitleMenu && (
+                                        <motion.div 
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: 10 }}
+                                            className="absolute bottom-full right-0 mb-4 bg-black/90 border border-white/10 rounded-lg p-2 min-w-[200px] shadow-xl"
+                                        >
+                                            <h4 className="px-3 py-2 text-xs font-bold text-white/40 uppercase tracking-wider">Subtitles</h4>
+                                            
+                                            <button 
+                                                onClick={() => { setActiveSubtitle(null); setShowSubtitleMenu(false); }}
+                                                className="w-full flex items-center justify-between px-3 py-2 hover:bg-white/10 rounded text-sm text-left transition-colors"
+                                            >
+                                                <span>Off</span>
+                                                {!activeSubtitle && <Check size={14} className="text-primary-500" />}
+                                            </button>
+                                            
+                                            {subtitles.map(sub => (
+                                                <button 
+                                                    key={sub.id} 
+                                                    onClick={() => { setActiveSubtitle(sub.id); setShowSubtitleMenu(false); }}
+                                                    className="w-full flex items-center justify-between px-3 py-2 hover:bg-white/10 rounded text-sm text-left transition-colors"
+                                                >
+                                                    <span className="flex items-center gap-2">
+                                                        <span>{sub.label}</span>
+                                                        <span className="text-xs text-white/40 uppercase">{sub.language}</span>
+                                                    </span>
+                                                    {activeSubtitle === sub.id && <Check size={14} className="text-primary-500" />}
+                                                </button>
+                                            ))}
+                                            
+                                            {subtitles.length === 0 && (
+                                                <div className="px-3 py-2 text-sm text-white/40">No subtitles available</div>
+                                            )}
+                                        </motion.div>
+                                    )}
+                                    </AnimatePresence>
+                                </div>
+
                                 <button onClick={() => {
                                     if (document.fullscreenElement) document.exitFullscreen();
                                     else document.documentElement.requestFullscreen();
