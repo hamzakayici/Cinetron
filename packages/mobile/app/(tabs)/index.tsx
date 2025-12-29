@@ -1,13 +1,18 @@
-import { ScrollView, Image, TouchableOpacity, View, Text, RefreshControl } from 'react-native';
+import { ScrollView, Image, TouchableOpacity, View, Text, RefreshControl, Platform } from 'react-native';
 import { useState, useCallback, useEffect } from 'react';
 import { getLibrary, getHistory } from '../../services/api';
 import { Media } from '../../constants/Types';
 import MediaCard from '../../components/MediaCard';
+import TVMediaCard from '../../components/TVMediaCard';
+import TVRow from '../../components/TVRow';
 import ContinueWatchingCard from '../../components/ContinueWatchingCard';
 import { Link } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Play, Plus } from 'lucide-react-native';
+
+// Check if running on TV
+const isTV = Platform.isTV || Platform.OS === 'android';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -43,6 +48,64 @@ export default function HomeScreen() {
   const series = medias.filter(m => m.type === 'series' || m.type === 'tv');
   const movies = medias.filter(m => m.type === 'movie');
 
+  // TV Interface (Grid + Rows)
+  if (isTV) {
+    return (
+      <View className="flex-1 bg-background">
+        <ScrollView
+          contentContainerStyle={{ paddingBottom: 100, paddingTop: 60 }}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#8b5cf6" />}
+          className="flex-1"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* TV Header */}
+          <View className="px-12 py-6">
+            <Text className="text-white text-4xl font-bold font-sans">Cinetron</Text>
+            <Text className="text-gray-400 text-xl font-sans mt-2">Kişisel sinemanıza hoş geldiniz</Text>
+          </View>
+
+          {/* Hero Section (TV Optimized - More compact) */}
+          {heroItem && (
+            <View className="px-12 mb-8">
+              <View className="flex-row">
+                <Image
+                  source={{ uri: heroItem.posterUrl || heroItem.backdropUrl }}
+                  style={{ width: 300, height: 450 }}
+                  className="rounded-xl"
+                  resizeMode="cover"
+                />
+                <View className="flex-1 ml-8 justify-center">
+                  <Text className="text-primary-400 font-bold font-sans text-lg uppercase mb-2">Öne Çıkan</Text>
+                  <Text className="text-white text-5xl font-bold font-sans mb-4">{heroItem.title}</Text>
+                  <Text className="text-gray-300 text-xl font-sans mb-6 leading-8" numberOfLines={4}>
+                    {heroItem.overview}
+                  </Text>
+                  <View className="flex-row gap-4">
+                    <Link href={`/media/${heroItem.id}`} asChild>
+                      <TouchableOpacity className="bg-primary px-8 py-4 rounded-xl flex-row items-center">
+                        <Play size={28} color="white" fill="white" />
+                        <Text className="text-white font-bold font-sans text-2xl ml-3">İzle</Text>
+                      </TouchableOpacity>
+                    </Link>
+                  </View>
+                </View>
+              </View>
+            </View>
+          )}
+
+          {/* Content Rows */}
+          {history.length > 0 && (
+            <TVRow title="Kaldığın Yerden Devam Et" items={history.map((h: any) => h.media)} />
+          )}
+          <TVRow title="Son Eklenenler" items={recentAdded} />
+          {movies.length > 0 && <TVRow title="Filmler" items={movies} />}
+          {series.length > 0 && <TVRow title="Diziler" items={series} />}
+        </ScrollView>
+      </View>
+    );
+  }
+
+  // Mobile Interface (Original)
   return (
     <View className="flex-1 bg-background">
       <ScrollView
@@ -67,7 +130,6 @@ export default function HomeScreen() {
                     style={{ width: '100%', height: '100%' }}
                 />
             )}
-            {/* Cinematic Vignette */}
             <LinearGradient
               colors={['transparent', 'rgba(0,0,0,0.2)', '#000000']}
               locations={[0, 0.6, 1]}
@@ -118,16 +180,37 @@ export default function HomeScreen() {
             </View>
           )}
           <View style={{ marginBottom: 32 }}>
-            <Section title="Son Eklenenler" items={recentAdded} />
+            <Text className="text-white text-lg font-bold font-sans mb-4">Son Eklenenler</Text>
+            <View className="flex-row flex-wrap justify-between">
+              {recentAdded.map((media) => (
+                <View key={media.id} className="mb-4">
+                  <MediaCard media={media} width={160} />
+                </View>
+              ))}
+            </View>
           </View>
           {series.length > 0 && (
             <View style={{ marginBottom: 32 }}>
-              <Section title="Diziler" items={series} />
+              <Text className="text-white text-lg font-bold font-sans mb-4">Diziler</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {series.map((media) => (
+                  <View key={media.id} className="mr-4">
+                    <MediaCard media={media} width={160} />
+                  </View>
+                ))}
+              </ScrollView>
             </View>
           )}
           {movies.length > 0 && (
             <View style={{ marginBottom: 32 }}>
-              <Section title="Filmler" items={movies} />
+              <Text className="text-white text-lg font-bold font-sans mb-4">Filmler</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {movies.map((media) => (
+                  <View key={media.id} className="mr-4">
+                    <MediaCard media={media} width={160} />
+                  </View>
+                ))}
+              </ScrollView>
             </View>
           )}
         </View>
@@ -155,17 +238,3 @@ export default function HomeScreen() {
     </View>
   );
 }
-
-const Section = ({ title, items }: { title: string, items: Media[] }) => (
-  <View>
-    <View className="flex-row items-center justify-between mb-4">
-        <Text className="text-white text-lg font-bold font-sans">{title}</Text>
-        <Text className="text-primary text-xs font-bold uppercase">Tümünü Gör</Text>
-    </View>
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 20 }}>
-      {items.map((item) => (
-        <MediaCard key={item.id} media={item} />
-      ))}
-    </ScrollView>
-  </View>
-);

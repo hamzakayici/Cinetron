@@ -22,7 +22,9 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "isTV": true,
+      "banner": "./assets/images/tv-banner.png"
     },
     "web": {
       "bundler": "metro",

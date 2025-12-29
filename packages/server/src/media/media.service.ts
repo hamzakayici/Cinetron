@@ -529,7 +529,9 @@ export class MediaService implements OnModuleInit {
         // Save media first
         const savedMedia = await this.mediaRepository.save(media);
 
-        // If TMDB ID provided, fetch metadata
+        // TMDB enrichment temporarily disabled
+        // Uncomment when getDetails is implemented
+        /*
         if (dto.tmdbId) {
             try {
                 await this.enrichMediaWithTmdb(savedMedia.id, dto.tmdbId, dto.type);
@@ -537,6 +539,7 @@ export class MediaService implements OnModuleInit {
                 this.logger.warn(`Failed to fetch TMDB metadata for ${dto.tmdbId}`, e);
             }
         }
+        */
 
         return savedMedia;
     }
@@ -579,6 +582,9 @@ export class MediaService implements OnModuleInit {
         await this.mediaRepository.remove(media);
     }
 
+    // TMDB metadata enrichment - disabled for now
+    // Uncomment when getDetails method is implemented in TmdbService
+    /*
     private async enrichMediaWithTmdb(mediaId: string, tmdbId: string, mediaType: string): Promise<void> {
         const type = mediaType === 'series' || mediaType === 'tv' ? 'tv' : 'movie';
         const metadata = await this.tmdbService.getDetails(type, parseInt(tmdbId));
@@ -592,4 +598,5 @@ export class MediaService implements OnModuleInit {
             });
         }
     }
+    */
 }
