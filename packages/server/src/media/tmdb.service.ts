@@ -18,7 +18,7 @@ export class TmdbService {
 
             const response = await axios.get(`${this.baseUrl}/search/movie`, {
                 headers: this.headers,
-                params,
+                params: { ...params, language: 'tr-TR' },
             });
             return response.data.results;
         } catch (error) {
@@ -34,7 +34,7 @@ export class TmdbService {
 
             const response = await axios.get(`${this.baseUrl}/search/tv`, {
                 headers: this.headers,
-                params,
+                params: { ...params, language: 'tr-TR' },
             });
             return response.data.results;
         } catch (error) {
@@ -47,6 +47,7 @@ export class TmdbService {
         try {
             const response = await axios.get(`${this.baseUrl}/movie/${id}`, {
                 headers: this.headers,
+                params: { language: 'tr-TR' },
             });
             return response.data;
         } catch (error) {
@@ -59,6 +60,7 @@ export class TmdbService {
         try {
             const response = await axios.get(`${this.baseUrl}/tv/${id}`, {
                 headers: this.headers,
+                params: { language: 'tr-TR' },
             });
             return response.data;
         } catch (error) {

@@ -96,7 +96,7 @@ const Player = () => {
 
     return (
         <div
-            className="relative h-screen w-full bg-black overflow-hidden group"
+            className={`relative h-screen w-full bg-black overflow-hidden group ${showControls ? 'cursor-default' : 'cursor-none'}`}
             onMouseMove={handleMouseMove}
             onMouseLeave={() => setShowControls(false)}
         >

@@ -8,7 +8,7 @@ import { Favorite } from '../users/favorite.entity';
 
 import { BullModule } from '@nestjs/bullmq';
 import { TmdbService } from './tmdb.service';
-
+import { MediaProcessor } from './media.processor';
 
 @Module({
     imports: [
@@ -18,7 +18,7 @@ import { TmdbService } from './tmdb.service';
         }),
     ],
     controllers: [MediaController],
-    providers: [MediaService, TmdbService],
+    providers: [MediaService, TmdbService, MediaProcessor],
     exports: [MediaService],
 })
 export class MediaModule { }

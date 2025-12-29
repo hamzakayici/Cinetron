@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
 import { scanLibrary } from '../../services/media';
@@ -13,7 +13,7 @@ const Admin = () => {
     const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState<'library' | 'users'>('library');
     const [showUserModal, setShowUserModal] = useState(false);
-    const [newUser, setNewUser] = useState({ email: '', password: '', role: 'user' });
+    const [newUser, setNewUser] = useState({ email: '', password: '', role: 'viewer' });
 
     const handleScan = async () => {
         setScanning(true);
@@ -29,13 +29,31 @@ const Admin = () => {
         }
     };
 
+    const [users, setUsers] = useState<any[]>([]);
+
+    useEffect(() => {
+        if (activeTab === 'users') {
+            fetchUsers();
+        }
+    }, [activeTab]);
+
+    const fetchUsers = async () => {
+        try {
+            const res = await api.get('/users');
+            setUsers(res.data);
+        } catch (err) {
+            console.error("Failed to fetch users", err);
+        }
+    };
+
     const handleCreateUser = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
             await api.post('/users', newUser);
             setShowUserModal(false);
-            setNewUser({ email: '', password: '', role: 'user' });
+            setNewUser({ email: '', password: '', role: 'viewer' });
             alert("User created!");
+            fetchUsers();
         } catch (err) {
             alert("Failed to create user");
         }
@@ -122,22 +140,29 @@ const Admin = () => {
                             <thead className="bg-white/5 text-white/60 text-sm uppercase">
                                 <tr>
                                     <th className="px-6 py-4">Email</th>
+                                    <th className="px-6 py-4">Name</th>
                                     <th className="px-6 py-4">Role</th>
-                                    <th className="px-6 py-4">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
-                                {/* Placeholder for user list, normally would fetch via API */}
-                                <tr className="hover:bg-white/5 transition-colors">
-                                    <td className="px-6 py-4">admin@cinetron.com</td>
-                                    <td className="px-6 py-4"><span className="bg-primary-500/20 text-primary-400 px-2 py-1 rounded text-xs font-bold">ADMIN</span></td>
-                                    <td className="px-6 py-4 text-white/40">Restricted</td>
-                                </tr>
+                                {users.map(user => (
+                                    <tr key={user.id} className="hover:bg-white/5 transition-colors">
+                                        <td className="px-6 py-4">{user.email}</td>
+                                        <td className="px-6 py-4">{user.firstName} {user.lastName}</td>
+                                        <td className="px-6 py-4">
+                                            <span className={`px-2 py-1 rounded text-xs font-bold ${user.role === 'admin' ? 'bg-primary-500/20 text-primary-400' : 'bg-white/10 text-white/60'}`}>
+                                                {user.role ? user.role.toUpperCase() : 'VIEWER'}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {users.length === 0 && (
+                                    <tr>
+                                        <td colSpan={3} className="px-6 py-8 text-center text-white/40">No users found.</td>
+                                    </tr>
+                                )}
                             </tbody>
                         </table>
-                        <div className="p-4 text-center text-white/40 text-sm">
-                            Real-time user list fetching integration pending...
-                        </div>
                     </div>
                 </div>
             )}
@@ -171,9 +196,9 @@ const Admin = () => {
                                 <select
                                     value={newUser.role}
                                     onChange={e => setNewUser({ ...newUser, role: e.target.value })}
-                                    className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-2 focus:border-primary-500 outline-none transition-colors"
+                                    className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-2 focus:border-primary-500 outline-none transition-colors text-white"
                                 >
-                                    <option value="user">User</option>
+                                    <option value="viewer">Viewer</option>
                                     <option value="admin">Admin</option>
                                 </select>
                             </div>

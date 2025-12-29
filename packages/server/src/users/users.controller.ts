@@ -3,25 +3,42 @@ import { UsersService } from './users.service';
 import { User, UserRole } from './user.entity';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
 
 @ApiTags('users')
 @ApiBearerAuth()
 @Controller('users')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'), RolesGuard)
 export class UsersController {
     constructor(private readonly usersService: UsersService) { }
 
     @Get()
+    @Roles(UserRole.ADMIN)
     @ApiOperation({ summary: 'List all users (Admin only)' })
     async findAll() {
-        // TODO: Check for Admin role
-        return this.usersService.count(); // For now just creating the structure, need to implement findAll in service
+        const users = await this.usersService.findAll();
+        // Remove passwords
+        return users.map(u => {
+            const { passwordHash, ...result } = u;
+            return result;
+        });
     }
 
     @Post()
+    @Roles(UserRole.ADMIN)
     @ApiOperation({ summary: 'Create a new user (Admin only)' })
-    async create(@Body() userData: Partial<User>) {
-        // TODO: Check for Admin role
-        return this.usersService.create(userData);
+    async create(@Body() userDto: any) {
+        // Map DTO to Entity partial
+        const newUser: Partial<User> = {
+            email: userDto.email,
+            passwordHash: userDto.password, // Service will hash this
+            firstName: userDto.firstName,
+            lastName: userDto.lastName,
+            role: userDto.role || UserRole.VIEWER,
+        };
+        const created = await this.usersService.create(newUser);
+        const { passwordHash, ...result } = created;
+        return result;
     }
 }
