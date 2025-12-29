@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { Episode } from './episode.entity';
 
 @Entity('media')
 export class Media {
@@ -27,10 +28,13 @@ export class Media {
     year: number;
 
     @Column({ default: 'movie' })
-    type: string; // 'movie' | 'tv'
+    type: string; // 'movie' | 'tv' | 'series'
 
     @Column({ default: false })
     processed: boolean; // True if transcoding is done/not needed
+
+    @OneToMany(() => Episode, (episode) => episode.media, { cascade: true })
+    episodes: Episode[];
 
     @CreateDateColumn()
     createdAt: Date;

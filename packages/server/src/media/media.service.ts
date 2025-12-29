@@ -29,6 +29,8 @@ export class MediaService implements OnModuleInit {
     constructor(
         @InjectRepository(Media)
         private mediaRepository: Repository<Media>,
+        @InjectRepository(Episode)
+        private episodeRepository: Repository<Episode>,
         @InjectRepository(WatchHistory)
         private historyRepository: Repository<WatchHistory>,
         @InjectRepository(Favorite)
@@ -39,123 +41,7 @@ export class MediaService implements OnModuleInit {
         this.initializeMinio();
     }
 
-    private initializeMinio() {
-        const endPoint = process.env.MINIO_ENDPOINT || 'minio';
-        const accessKey = process.env.MINIO_ROOT_USER || process.env.MINIO_ACCESS_KEY || 'minioadmin';
-        const secretKey = process.env.MINIO_ROOT_PASSWORD || process.env.MINIO_SECRET_KEY || 'minioadmin';
-
-        // Ensure port is a number
-        const port = parseInt(process.env.MINIO_API_PORT || '9000', 10);
-
-        try {
-            this.minioClient = new Minio.Client({
-                endPoint,
-                port,
-                useSSL: false, // Default to false for internal docker network
-                accessKey,
-                secretKey,
-            });
-
-            // Initialize Public Client (Signer)
-            // Parses MINIO_EXTERNAL_URL to config (e.g., http://localhost:9000 -> endPoint: localhost, port: 9000)
-            const externalUrlStr = process.env.MINIO_EXTERNAL_URL || 'http://localhost:9000';
-            try {
-                // Handle cases where external URL might not have protocol for legacy reasons, though we default to http://
-                const urlWithProto = externalUrlStr.includes('://') ? externalUrlStr : `http://${externalUrlStr}`;
-                const parsedUrl = new URL(urlWithProto);
-
-                this.publicMinioClient = new Minio.Client({
-                    endPoint: parsedUrl.hostname,
-                    port: parseInt(parsedUrl.port || (parsedUrl.protocol === 'https:' ? '443' : '80')),
-                    useSSL: parsedUrl.protocol === 'https:',
-                    accessKey,
-                    secretKey,
-                });
-                this.logger.log(`MinIO Public Signer initialized for: ${parsedUrl.hostname}:${parsedUrl.port}`);
-            } catch (e) {
-                this.logger.warn(`Failed to initialize public MinIO signer from ${externalUrlStr}, falling back to internal`, e);
-                this.publicMinioClient = this.minioClient;
-            }
-
-            this.logger.log(`MinIO Client initialized for endpoint: ${endPoint}:${port}`);
-        } catch (err) {
-            this.logger.error('Failed to initialize MinIO Client', err);
-        }
-    }
-
-    async onModuleInit() {
-        this.logger.log('Checking for initial data seeding...');
-        await this.seedMockData();
-        await this.ensureBucketExists();
-    }
-
-    private async ensureBucketExists() {
-        if (!this.minioClient) return;
-        try {
-            const exists = await this.minioClient.bucketExists(this.minioBucket);
-            if (!exists) {
-                await this.minioClient.makeBucket(this.minioBucket, 'us-east-1'); // Region is required but often ignored by MinIO
-                this.logger.log(`Created default MinIO bucket: ${this.minioBucket}`);
-            } else {
-                this.logger.log(`MinIO bucket '${this.minioBucket}' already exists.`);
-            }
-        } catch (err) {
-            this.logger.error(`Failed to ensure MinIO bucket '${this.minioBucket}' exists`, err);
-        }
-    }
-
-    async findAll(): Promise<Media[]> {
-        const medias = await this.mediaRepository.find({
-            order: { createdAt: 'DESC' }
-        });
-
-        return Promise.all(medias.map(async (media) => {
-            return media;
-        }));
-    }
-
-    async findOne(id: string): Promise<Media & { playbackUrl?: string }> {
-        const media = await this.mediaRepository.findOneBy({ id });
-        if (!media) return null;
-
-        const result: Media & { playbackUrl?: string } = { ...media };
-
-        if (media.filePath.startsWith('minio:')) {
-            const url = await this.getPresignedUrl(media.filePath);
-            if (url) {
-                result.playbackUrl = url;
-            }
-        } else if (media.filePath.startsWith('http://') || media.filePath.startsWith('https://')) {
-            result.playbackUrl = media.filePath;
-        } else {
-            const fileName = path.basename(media.filePath);
-            result.playbackUrl = `/media/${encodeURIComponent(fileName)}`;
-        }
-
-        return result;
-    }
-
-    async getPresignedUrl(filePath: string): Promise<string | null> {
-        if (!this.minioClient || !filePath.startsWith('minio:')) return null;
-
-        try {
-            const parts = filePath.split(':');
-            if (parts.length < 3) return null;
-
-            const bucket = parts[1];
-            const objectName = parts.slice(2).join(':');
-
-            // Use the PUBLIC client to generate the URL
-            // This ensures the signature is calculated for the external host ("localhost")
-            // and the URL itself points to the external host.
-            // No string replacement needed.
-            const url = await this.publicMinioClient.presignedGetObject(bucket, objectName, 3 * 60 * 60);
-            return url;
-        } catch (error) {
-            this.logger.error(`Failed to get presigned URL for ${filePath}:`, error);
-            return null;
-        }
-    }
+// ... existing setup ...
 
     async seedMockData() {
         const testTitle = "Big Buck Bunny";
@@ -195,6 +81,26 @@ export class MediaService implements OnModuleInit {
             series.filePath = "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"; 
             
             const savedSeries = await this.mediaRepository.save(series);
+
+            // Seed Episodes
+            const episodes = [
+                { s: 1, e: 1, title: 'İhanet', overview: 'Ömer bir sabah, en yakın arkadaşları Ali ve Cengiz ile sevgilisi Eyşan tarafından bir soygun suçu üzerine atılarak hapse gönderilir.' },
+                { s: 1, e: 2, title: 'Şüphe', overview: 'Ezel yeni kimliğiyle intikamına başlar. İlk hedefi Cengiz ve Ali arasındaki güveni sarsmaktır.' },
+                { s: 1, e: 3, title: 'Aşk', overview: 'Eyşan ile karşılaşan Ezel, eski duygularına hakim olmaya çalışır.' }
+            ];
+
+            for (const ep of episodes) {
+                await this.episodeRepository.save(this.episodeRepository.create({
+                    title: ep.title,
+                    seasonNumber: ep.s,
+                    episodeNumber: ep.e,
+                    overview: ep.overview,
+                    filePath: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4", // Mock video
+                    mediaId: savedSeries.id,
+                    stillUrl: `https://placehold.co/1920x1080/1a1a1a/ffffff?text=S${ep.s}E${ep.e}`
+                }));
+            }
+
             // Trigger enhance immediately !
              await this.mediaQueue.add('enhance', { mediaId: savedSeries.id });
         }

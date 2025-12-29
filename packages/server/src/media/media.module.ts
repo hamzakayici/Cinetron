@@ -10,9 +10,11 @@ import { BullModule } from '@nestjs/bullmq';
 import { TmdbService } from './tmdb.service';
 import { MediaProcessor } from './media.processor';
 
+import { Episode } from './episode.entity';
+
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Media, WatchHistory, Favorite]),
+        TypeOrmModule.forFeature([Media, Episode, WatchHistory, Favorite]),
         BullModule.registerQueue({
             name: 'media',
         }),
