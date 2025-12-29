@@ -1,8 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { InjectQueue } from '@nestjs/bullmq';
-import { Queue } from 'bullmq';
 import * as path from 'path';
 import * as fs from 'fs';
 import { TmdbService } from './tmdb.service';
@@ -30,7 +28,6 @@ export class MediaService implements OnModuleInit {
         private favoriteRepository: Repository<Favorite>,
         @InjectRepository(Subtitle)
         private subtitleRepository: Repository<Subtitle>,
-        @InjectQueue('media') private mediaQueue: Queue,
         private readonly tmdbService: TmdbService,
     ) {}
 

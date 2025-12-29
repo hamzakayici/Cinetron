@@ -17,15 +17,10 @@ services:
       DB_PASSWORD: cinetron_password
       DB_NAME: cinetron_db
 
-      # Redis
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-
       # Auth
       JWT_SECRET: cinetron_secret_key_change_me
     depends_on:
       - postgres
-      - redis
 
   postgres:
     image: postgres:15-alpine
@@ -38,13 +33,5 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  redis:
-    image: redis:7-alpine
-    container_name: cinetron-redis
-    restart: always
-    volumes:
-      - redis_data:/data
-
 volumes:
   postgres_data:
-  redis_data:
