@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, Pressable, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, Pressable, Platform, Dimensions, GestureResponderEvent } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Video, ResizeMode, AVPlaybackStatus } from 'expo-av';
-import { Play, Pause, SkipBack, SkipForward, X, Subtitles as SubtitlesIcon, Check } from 'lucide-react-native';
+import { Play, Pause, SkipBack, SkipForward, X, Subtitles as SubtitlesIcon, Check, Lock, Unlock, Maximize2, Minimize2 } from 'lucide-react-native';
 import { getMediaDetail, getEpisodeDetail, getSubtitles } from '../../services/api';
 import Slider from '@react-native-community/slider';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -30,6 +30,11 @@ export default function PlayerScreen() {
     const [cues, setCues] = useState<any[]>([]);
     const [currentCue, setCurrentCue] = useState<string | null>(null);
     const [showSubtitleMenu, setShowSubtitleMenu] = useState(false);
+
+    // Advanced Mobile Features
+    const [resizeMode, setResizeMode] = useState(ResizeMode.CONTAIN);
+    const [isLocked, setIsLocked] = useState(false);
+    const lastTapRef = useRef<number>(0);
 
     useEffect(() => {
         loadMedia();
@@ -120,13 +125,59 @@ export default function PlayerScreen() {
     };
 
     const resetControlsTimeout = () => {
+        if (isLocked) return;
         setShowControls(true);
         if (controlsTimeout.current) {
             clearTimeout(controlsTimeout.current);
         }
         controlsTimeout.current = setTimeout(() => {
             if (isPlaying) setShowControls(false);
-        }, isTV ? 5000 : 3000); // TV'de daha uzun süre göster
+        }, isTV ? 5000 : 3000);
+    };
+
+    // Handle Screen Press (Double Tap & Single Tap)
+    const handleScreenPress = (e: GestureResponderEvent) => {
+        const now = Date.now();
+        const DOUBLE_PRESS_DELAY = 300;
+        
+        if (now - lastTapRef.current < DOUBLE_PRESS_DELAY) {
+            // Double Tap Detected
+            if (isLocked) return;
+
+            const screenWidth = Dimensions.get('window').width;
+            const touchX = e.nativeEvent.pageX;
+            
+            if (touchX < screenWidth / 2) {
+                skip(-10); // Left side -> Rewind
+            } else {
+                skip(10); // Right side -> Forward
+            }
+            lastTapRef.current = 0; // Reset
+        } else {
+            // Single Tap
+            lastTapRef.current = now;
+            // Delay action to wait for potential double tap? 
+            // Better to toggle controls immediately for responsiveness
+            if (isLocked) {
+                setShowControls(!showControls); // Show lock button
+            } else {
+                resetControlsTimeout();
+            }
+        }
+    };
+
+    const toggleLock = () => {
+        setIsLocked(!isLocked);
+        setShowControls(true);
+        // If locking, hide controls after delay
+        if (!isLocked) {
+             if (controlsTimeout.current) clearTimeout(controlsTimeout.current);
+             controlsTimeout.current = setTimeout(() => setShowControls(false), 3000);
+        }
+    };
+
+    const toggleResizeMode = () => {
+        setResizeMode(prev => prev === ResizeMode.CONTAIN ? ResizeMode.COVER : ResizeMode.CONTAIN);
     };
 
     const formatTime = (ms: number) => {
@@ -246,31 +297,61 @@ export default function PlayerScreen() {
             <StatusBar hidden />
             <Pressable 
                 className="flex-1"
-                onPress={resetControlsTimeout}
+                onPress={handleScreenPress}
             >
                 <Video
                     ref={videoRef}
                     source={{ uri: playbackUrl }}
                     style={{ width: '100%', height: '100%' }}
-                    resizeMode={ResizeMode.CONTAIN}
+                    resizeMode={resizeMode}
                     shouldPlay
                     useNativeControls={false}
                     onPlaybackStatusUpdate={handlePlaybackStatusUpdate}
                 />
 
+                {/* Lock Button (Always visible when controls shown) */}
                 {showControls && (
+                    <View className="absolute top-12 left-6 z-50">
+                        <TouchableOpacity 
+                            onPress={toggleLock}
+                            className="bg-black/60 p-2 rounded-full"
+                        >
+                            {isLocked ? <Lock size={24} color="#ef4444" /> : <Unlock size={24} color="white" />}
+                        </TouchableOpacity>
+                    </View>
+                )}
+
+                {/* Locked State Overlay */}
+                {showControls && isLocked && (
+                    <View className="absolute inset-0 justify-center items-center z-40 pointer-events-none">
+                         <Text className="text-white/50 font-bold bg-black/40 px-4 py-2 rounded-lg">Screen Locked</Text>
+                    </View>
+                )}
+
+                {showControls && !isLocked && (
                     <View className="absolute inset-0 bg-black/30">
                         <View 
                             className="absolute top-0 left-0 right-0 p-6 flex-row items-center justify-between"
                             style={{ paddingTop: insets.top + 10 }}
                         >
-                            <Text className="text-white text-xl font-bold font-sans">{title}</Text>
-                            <TouchableOpacity
-                                onPress={() => router.back()}
-                                className="bg-black/60 p-2 rounded-full"
-                            >
-                                <X size={24} color="white" />
-                            </TouchableOpacity>
+                            {/* Adjusted padding for Lock button on left */}
+                            <Text className="text-white text-xl font-bold font-sans ml-12">{title}</Text>
+                            
+                            <View className="flex-row gap-4">
+                                <TouchableOpacity 
+                                    onPress={toggleResizeMode}
+                                    className="bg-black/60 p-2 rounded-full"
+                                >
+                                    {resizeMode === ResizeMode.CONTAIN ? <Maximize2 size={24} color="white" /> : <Minimize2 size={24} color="white" />}
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    onPress={() => router.back()}
+                                    className="bg-black/60 p-2 rounded-full"
+                                >
+                                    <X size={24} color="white" />
+                                </TouchableOpacity>
+                            </View>
                         </View>
 
                         <View className="flex-1 justify-center items-center">

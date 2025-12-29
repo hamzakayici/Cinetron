@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, Play, Pause, RotateCcw, Volume2, VolumeX, Maximize, Subtitles as SubtitlesIcon, Check } from 'lucide-react';
+import { ArrowLeft, Loader2, Play, Pause, RotateCcw, Volume2, VolumeX, Maximize, Subtitles as SubtitlesIcon, Check, Settings, PictureInPicture, FastForward } from 'lucide-react';
 import api from '../../services/api';
 import { type Media, saveProgress, getProgress } from '../../services/media';
 import { getSubtitles } from '../../services/api';
@@ -24,11 +24,17 @@ const Player = () => {
     const [showControls, setShowControls] = useState(false);
     const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    // Subtitle State
-    const [subtitles, setSubtitles] = useState<any[]>([]);
-    const [activeSubtitle, setActiveSubtitle] = useState<string | null>(null); // null = off
     const [showSubtitleMenu, setShowSubtitleMenu] = useState(false);
 
+    // Subtitle State
+    const [subtitles, setSubtitles] = useState<any[]>([]);
+    const [activeSubtitle, setActiveSubtitle] = useState<string | null>(null);
+
+    // Advanced Features State
+    const [playbackSpeed, setPlaybackSpeed] = useState(1);
+    const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+    
+    // Auto-play fix & Fetch Data
     useEffect(() => {
         const fetchData = async () => {
             if (!id) return;
@@ -36,18 +42,25 @@ const Player = () => {
                 const [mediaRes, progress, subRes] = await Promise.all([
                     api.get(`/media/${id}`),
                     getProgress(id),
-                    getSubtitles(id as string) // Fetch subtitles
+                    getSubtitles(id as string)
                 ]);
                 setMedia(mediaRes.data);
                 setSubtitles(subRes.data);
                 
-                if (progress > 10) { // Only prompt if watched more than 10 seconds
+                if (progress > 10) { 
                     setInitialProgress(progress);
                     setShowResumePrompt(true);
+                    // Don't auto-play yet, wait for user choice
+                    setIsPlaying(false);
+                } else {
+                    // Auto-play immediately if starting from beginning
+                    // Small delay to ensure video element is ready
+                    setTimeout(() => {
+                         if (videoRef.current) {
+                             videoRef.current.play().catch(() => setIsPlaying(false));
+                         }
+                    }, 100);
                 }
-                
-                // Auto-select first subtitle if available (optional preference)
-                // if (subRes.data.length > 0) setActiveSubtitle(subRes.data[0].id);
 
             } catch (err) {
                 console.error("Failed to load media details", err);
@@ -57,6 +70,52 @@ const Player = () => {
         };
         fetchData();
     }, [id]);
+
+    // Keyboard Shortcuts
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (!videoRef.current) return;
+            
+            // Prevent default scrolling for Space/Arrows
+            if([' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                e.preventDefault();
+            }
+
+            switch(e.key.toLowerCase()) {
+                case ' ':
+                case 'k':
+                    togglePlay();
+                    break;
+                case 'arrowleft':
+                case 'j':
+                    videoRef.current.currentTime -= 10;
+                    handleMouseMove(); // show controls
+                    break;
+                case 'arrowright':
+                case 'l':
+                    videoRef.current.currentTime += 10;
+                    handleMouseMove();
+                    break;
+                case 'arrowup':
+                    setVolume(v => Math.min(1, v + 0.1));
+                    videoRef.current.volume = Math.min(1, volume + 0.1);
+                    break;
+                case 'arrowdown':
+                    setVolume(v => Math.max(0, v - 0.1));
+                    videoRef.current.volume = Math.max(0, volume - 0.1);
+                    break;
+                case 'f':
+                    toggleFullscreen();
+                    break;
+                case 'm':
+                    toggleMute();
+                    break;
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [volume]); // Re-bind when volume changes (or better, use functional updates)
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -104,10 +163,42 @@ const Player = () => {
 
     const togglePlay = () => {
         if (videoRef.current) {
-            if (isPlaying) videoRef.current.pause();
-            else videoRef.current.play();
-            setIsPlaying(!isPlaying);
+            if (videoRef.current.paused) {
+                videoRef.current.play();
+                setIsPlaying(true);
+            } else {
+                videoRef.current.pause();
+                setIsPlaying(false);
+            }
         }
+    };
+
+    const toggleFullscreen = () => {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+        } else {
+            document.exitFullscreen();
+        }
+    };
+
+    const toggleMute = () => {
+        const newMuted = !isMuted;
+        setIsMuted(newMuted);
+        if (videoRef.current) videoRef.current.muted = newMuted;
+    };
+
+    const togglePiP = async () => {
+        if (document.pictureInPictureElement) {
+            await document.exitPictureInPicture();
+        } else if (videoRef.current) {
+            await videoRef.current.requestPictureInPicture();
+        }
+    };
+
+    const changeSpeed = (speed: number) => {
+        setPlaybackSpeed(speed);
+        if (videoRef.current) videoRef.current.playbackRate = speed;
+        setShowSettingsMenu(false);
     };
 
     const handleMouseMove = () => {
@@ -132,7 +223,11 @@ const Player = () => {
             className={`relative h-screen w-full bg-black overflow-hidden group ${showControls ? 'cursor-default' : 'cursor-none'}`}
             onMouseMove={handleMouseMove}
             onMouseLeave={() => setShowControls(false)}
-            onClick={() => { if(showSubtitleMenu) setShowSubtitleMenu(false); }}
+            onClick={() => { 
+                if(showSubtitleMenu) setShowSubtitleMenu(false); 
+                if(showSettingsMenu) setShowSettingsMenu(false);
+            }}
+            onDoubleClick={toggleFullscreen}
         >
             {/* Resume Prompt Modal */}
             <AnimatePresence>
@@ -292,10 +387,46 @@ const Player = () => {
                                     </AnimatePresence>
                                 </div>
 
-                                <button onClick={() => {
-                                    if (document.fullscreenElement) document.exitFullscreen();
-                                    else document.documentElement.requestFullscreen();
-                                }} className="text-white hover:text-white/80">
+                                {/* Settings Button & Menu */}
+                                <div className="relative">
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); setShowSettingsMenu(!showSettingsMenu); setShowSubtitleMenu(false); }} 
+                                        className={`transition ${showSettingsMenu ? 'text-primary-500' : 'text-white hover:text-primary-500'}`}
+                                        title="Settings"
+                                    >
+                                        <Settings size={24} />
+                                    </button>
+                                    
+                                    <AnimatePresence>
+                                    {showSettingsMenu && (
+                                        <motion.div 
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: 10 }}
+                                            className="absolute bottom-full right-0 mb-4 bg-black/90 border border-white/10 rounded-lg p-2 min-w-[160px] shadow-xl"
+                                        >
+                                            <h4 className="px-3 py-2 text-xs font-bold text-white/40 uppercase tracking-wider">Speed</h4>
+                                            
+                                            {[0.5, 0.75, 1, 1.25, 1.5, 2].map(speed => (
+                                                <button 
+                                                    key={speed} 
+                                                    onClick={() => changeSpeed(speed)}
+                                                    className="w-full flex items-center justify-between px-3 py-2 hover:bg-white/10 rounded text-sm text-left transition-colors"
+                                                >
+                                                    <span>{speed}x</span>
+                                                    {playbackSpeed === speed && <Check size={14} className="text-primary-500" />}
+                                                </button>
+                                            ))}
+                                        </motion.div>
+                                    )}
+                                    </AnimatePresence>
+                                </div>
+
+                                <button onClick={togglePiP} className="text-white hover:text-white/80 hidden sm:block" title="Picture in Picture">
+                                    <PictureInPicture size={24} />
+                                </button>
+
+                                <button onClick={toggleFullscreen} className="text-white hover:text-white/80" title="Fullscreen">
                                     <Maximize size={24} />
                                 </button>
                             </div>
