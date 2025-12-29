@@ -41,6 +41,21 @@
         "moreInfo": "Daha Fazla Bilgi",
         "continueWatching": "İzlemeye Devam Et",
         "recentlyAdded": "Son Eklenenler",
-        "scifi": "Bilim Kurgu & Fantastik"
+        "scifi": "Bilim Kurgu & Fantastik",
+        "exploreAll": "Tümünü Gör"
+    },
+    "detail": {
+        "moreLikeThis": "Benzer İçerikler",
+        "recommendationComingSoon": "Öneri motoru yakında geliyor...",
+        "noOverview": "Açıklama bulunamadı.",
+        "mediaNotFound": "İçerik bulunamadı",
+        "loading": "Yükleniyor..."
+    },
+    "media": {
+        "type": {
+            "movie": "Film",
+            "tv": "Dizi",
+            "series": "Dizi"
+        }
     }
 }

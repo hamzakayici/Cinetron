@@ -97,7 +97,9 @@ const Library = () => {
                     <div className="flex items-center gap-4 mb-8 text-sm font-semibold text-green-400 tracking-wide">
                         <span>{heroItem.year || '2024'}</span>
                         <span className="text-white/60">•</span>
-                        <span className="px-2 py-0.5 border border-white/40 rounded text-xs text-white/80 uppercase">{heroItem.type}</span>
+                        <span className="px-2 py-0.5 border border-white/40 rounded text-xs text-white/80 uppercase">
+                            {t(`media.type.${heroItem.type}`, { defaultValue: heroItem.type })}
+                        </span>
                     </div>
 
                     <motion.p
@@ -140,7 +142,9 @@ const Library = () => {
                         <div key={idx} className="space-y-4">
                             <h3 className="text-xl md:text-2xl font-bold text-white/90 ml-1 hover:text-primary-400 transition-colors cursor-pointer flex items-center gap-2 group">
                                 {category.title}
-                                <span className="text-xs opacity-0 -translate-x-2 group-hover:translate-x-0 group-hover:opacity-100 transition-all text-primary-400 font-medium tracking-wider">Explore All &gt;</span>
+                                <span className="text-xs opacity-0 -translate-x-2 group-hover:translate-x-0 group-hover:opacity-100 transition-all text-primary-400 font-medium tracking-wider">
+                                    {t('library.exploreAll')} &gt;
+                                </span>
                             </h3>
 
                             <div className="flex gap-4 overflow-x-auto pb-8 scrollbar-hide snap-x -mx-4 px-4 md:-mx-16 md:px-16">

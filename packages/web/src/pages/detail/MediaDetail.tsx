@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Play, ArrowLeft, Plus, ThumbsUp, Check } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { getMediaById, type Media } from '../../services/media';
 import { addFavorite, removeFavorite, checkFavorite } from '../../services/api';
 
@@ -11,6 +12,8 @@ const MediaDetail = () => {
     const [media, setMedia] = useState<Media | null>(null);
     const [loading, setLoading] = useState(true);
     const [isFavorite, setIsFavorite] = useState(false);
+
+    const { t } = useTranslation();
 
     useEffect(() => {
         if (!id) return;
@@ -41,11 +44,11 @@ const MediaDetail = () => {
     };
 
     if (loading) {
-        return <div className="flex h-screen items-center justify-center bg-background text-white">Loading...</div>;
+        return <div className="flex h-screen items-center justify-center bg-background text-white">{t('detail.loading')}</div>;
     }
 
     if (!media) {
-        return <div className="flex h-screen items-center justify-center bg-background text-white">Media not found</div>;
+        return <div className="flex h-screen items-center justify-center bg-background text-white">{t('detail.mediaNotFound')}</div>;
     }
 
     return (
@@ -82,12 +85,12 @@ const MediaDetail = () => {
 
                     <div className="mb-6 flex items-center gap-4 text-lg font-medium text-white/70">
                         {media.year && <span>{media.year}</span>}
-                        {media.type === 'movie' ? <span>Film</span> : <span>TV Show</span>}
+                        <span>{t(`media.type.${media.type}`, { defaultValue: media.type })}</span>
                         <span className="rounded border border-white/30 px-2 py-0.5 text-xs">HD</span>
                     </div>
 
                     <p className="mb-8 max-w-2xl text-xl leading-relaxed text-white/90 drop-shadow-lg">
-                        {media.overview || 'No overview available.'}
+                        {media.overview || t('detail.noOverview')}
                     </p>
 
                     <div className="flex items-center gap-4">
@@ -96,7 +99,7 @@ const MediaDetail = () => {
                             className="flex items-center gap-3 rounded bg-white px-8 py-3 text-xl font-bold text-black transition-transform hover:scale-105 active:scale-95"
                         >
                             <Play fill="currentColor" size={24} />
-                            Oynat
+                            {t('library.play')}
                         </button>
 
                         <button
@@ -116,8 +119,8 @@ const MediaDetail = () => {
 
                     {/* Additional Metadata / Cast could go here */}
                     <div className="mt-20">
-                        <h3 className="mb-4 text-2xl font-bold">More Like This</h3>
-                        <p className="text-white/50">Recommendation engine coming soon...</p>
+                        <h3 className="mb-4 text-2xl font-bold">{t('detail.moreLikeThis')}</h3>
+                        <p className="text-white/50">{t('detail.recommendationComingSoon')}</p>
                     </div>
                 </motion.div>
             </div>

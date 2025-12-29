@@ -174,6 +174,30 @@ export class MediaService implements OnModuleInit {
             });
             await this.mediaRepository.save(media);
         }
+
+        const seriesTitle = "Ezel";
+        const seriesExists = await this.mediaRepository.findOneBy({ title: seriesTitle });
+        if (!seriesExists) {
+            this.logger.log(`Seeding test series: ${seriesTitle}`);
+            const series = this.mediaRepository.create({
+                title: seriesTitle,
+                year: 2009,
+                overview: "Ömer, sevdiği kadın Eyşan ve en yakın arkadaşları Cengiz ve Ali tarafından ihanete uğrar. Hapiste geçirdiği yıllardan sonra estetik ameliyatla yüzünü değiştirip 'Ezel' olarak geri döner ve intikam planını devreye sokar.",
+                filePath: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4", // Placeholder video
+                type: 'series',
+                // Using placeholder so metadata enhancer fetches real data from TMDB
+                posterUrl: `https://placehold.co/400x600/1a1a1a/ffffff?text=${encodeURIComponent(seriesTitle)}`,
+                backdropUrl: `https://placehold.co/1920x1080/1a1a1a/ffffff?text=${encodeURIComponent(seriesTitle)}`,
+                processed: true
+            });
+            
+            // Re-use BigBuckBunny link for now as reliable playback
+            series.filePath = "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"; 
+            
+            const savedSeries = await this.mediaRepository.save(series);
+            // Trigger enhance immediately !
+             await this.mediaQueue.add('enhance', { mediaId: savedSeries.id });
+        }
     }
 
     /**
