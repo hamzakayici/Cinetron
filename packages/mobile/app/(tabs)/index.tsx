@@ -11,8 +11,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Play, Plus } from 'lucide-react-native';
 
-// Check if running on TV
-const isTV = Platform.isTV || Platform.OS === 'android';
+// Check if running on TV (only use Platform.isTV flag)
+const isTV = Platform.isTV;
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
