@@ -24,7 +24,8 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "isTV": true,
-      "banner": "./assets/images/tv-banner.png"
+      "banner": "./assets/images/tv-banner.png",
+      "package": "com.hamzakayici.mobile"
     },
     "web": {
       "bundler": "metro",
