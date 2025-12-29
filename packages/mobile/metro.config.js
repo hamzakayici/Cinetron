@@ -15,6 +15,11 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, "node_modules"),
 ];
 // 3. Force Metro to resolve (sub)dependencies only from the `nodeModulesPaths`
-config.resolver.disableHierarchicalLookup = true;
+// config.resolver.disableHierarchicalLookup = true;
+
+config.resolver.extraNodeModules = {
+  ...config.resolver.extraNodeModules,
+  'react-native-css-interop': path.resolve(projectRoot, 'node_modules/react-native-css-interop'),
+};
 
 module.exports = withNativeWind(config, { input: "./global.css" });

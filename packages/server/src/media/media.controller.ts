@@ -1,8 +1,28 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Request, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, Request, Delete, Put, UseInterceptors, UploadedFiles } from '@nestjs/common';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { v4 as uuidv4 } from 'uuid';
+import { extname } from 'path';
 import { MediaService } from './media.service';
 import { Media } from './media.entity';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
+import { CreateMediaDto, UpdateMediaDto } from './dto/media.dto';
+import { UserRole } from '../users/user.entity';
+
+// Multer storage configuration
+const storage = diskStorage({
+    destination: (req, file, cb) => {
+        const dest = file.fieldname === 'videoFile' ? './public/uploads/videos' : './public/uploads/images';
+        cb(null, dest);
+    },
+    filename: (req, file, cb) => {
+        const uniqueName = `${uuidv4()}${extname(file.originalname)}`;
+        cb(null, uniqueName);
+    },
+});
 
 @ApiTags('media')
 @Controller('media')
@@ -19,6 +39,12 @@ export class MediaController {
     @ApiOperation({ summary: 'Get single media item with playback details' })
     findOne(@Param('id') id: string): Promise<Media> {
         return this.mediaService.findOne(id);
+    }
+
+    @Get('episode/:id')
+    @ApiOperation({ summary: 'Get single episode with playback details' })
+    getEpisode(@Param('id') id: string) {
+        return this.mediaService.getEpisode(id);
     }
 
     @Get('scan')
@@ -82,5 +108,64 @@ export class MediaController {
     async checkFavorite(@Param('id') id: string, @Request() req) {
         const isFavorite = await this.mediaService.checkFavorite(req.user.userId, id);
         return { isFavorite };
+    }
+
+    // Admin endpoints
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
+    @Roles(UserRole.ADMIN)
+    @Post()
+    @ApiOperation({ summary: 'Create new media (admin only)' })
+    @ApiConsumes('multipart/form-data')
+    @UseInterceptors(
+        FileFieldsInterceptor([
+            { name: 'videoFile', maxCount: 1 },
+            { name: 'posterFile', maxCount: 1 },
+            { name: 'backdropFile', maxCount: 1 },
+        ], { storage }),
+    )
+    async createMedia(
+        @UploadedFiles() files: {
+            videoFile?: Express.Multer.File[];
+            posterFile?: Express.Multer.File[];
+            backdropFile?: Express.Multer.File[];
+        },
+        @Body() createMediaDto: CreateMediaDto,
+    ) {
+        return this.mediaService.createMedia(createMediaDto, files);
+    }
+
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
+    @Roles(UserRole.ADMIN)
+    @Put(':id')
+    @ApiOperation({ summary: 'Update media (admin only)' })
+    @ApiConsumes('multipart/form-data')
+    @UseInterceptors(
+        FileFieldsInterceptor([
+            { name: 'videoFile', maxCount: 1 },
+            { name: 'posterFile', maxCount: 1 },
+            { name: 'backdropFile', maxCount: 1 },
+        ], { storage }),
+    )
+    async updateMedia(
+        @Param('id') id: string,
+        @UploadedFiles() files: {
+            videoFile?: Express.Multer.File[];
+            posterFile?: Express.Multer.File[];
+            backdropFile?: Express.Multer.File[];
+        },
+        @Body() updateMediaDto: UpdateMediaDto,
+    ) {
+        return this.mediaService.updateMedia(id, updateMediaDto, files);
+    }
+
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
+    @Roles(UserRole.ADMIN)
+    @Delete(':id')
+    @ApiOperation({ summary: 'Delete media (admin only)' })
+    async deleteMedia(@Param('id') id: string) {
+        return this.mediaService.deleteMedia(id);
     }
 }

@@ -54,4 +54,36 @@ export const getServerUrl = async () => {
     return await SecureStore.getItemAsync('serverUrl') || DEFAULT_API_URL;
 };
 
+// Media API
+export const getLibrary = async () => {
+    const response = await api.get('/media');
+    return response.data;
+};
+
+export const getMediaDetail = async (id: string) => {
+    const response = await api.get(`/media/${id}`);
+    return response.data;
+};
+
+export const getEpisodeDetail = async (id: string) => {
+    const response = await api.get(`/media/episode/${id}`);
+    return response.data;
+};
+
+export const getHistory = async () => {
+    const response = await api.get('/media/history');
+    return response.data;
+};
+
+export const getFavorites = async () => {
+    const response = await api.get('/media/favorites');
+    return response.data;
+};
+
+export const toggleFavorite = async (mediaId: string) => {
+    const response = await api.post(`/media/${mediaId}/favorite`);
+    return response.data;
+};
+
 export default api;
+

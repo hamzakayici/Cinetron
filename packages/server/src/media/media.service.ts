@@ -178,7 +178,7 @@ export class MediaService implements OnModuleInit {
                 title: testTitle,
                 year: 2008,
                 overview: "A large and lovable rabbit deals with three tiny bullies, led by a flying squirrel, who are determined to squelch his happiness.",
-                filePath: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                filePath: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
                 type: 'movie',
                 posterUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Big_buck_bunny_poster_big.jpg/800px-Big_buck_bunny_poster_big.jpg",
                 backdropUrl: "https://peach.blender.org/wp-content/uploads/title_anouncement.jpg?x11217",
@@ -195,7 +195,7 @@ export class MediaService implements OnModuleInit {
                 title: seriesTitle,
                 year: 2009,
                 overview: "Ömer, sevdiği kadın Eyşan ve en yakın arkadaşları Cengiz ve Ali tarafından ihanete uğrar. Hapiste geçirdiği yıllardan sonra estetik ameliyatla yüzünü değiştirip 'Ezel' olarak geri döner ve intikam planını devreye sokar.",
-                filePath: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4", // Placeholder video
+                filePath: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4", // Placeholder video
                 type: 'series',
                 // Using placeholder so metadata enhancer fetches real data from TMDB
                 posterUrl: `https://placehold.co/400x600/1a1a1a/ffffff?text=${encodeURIComponent(seriesTitle)}`,
@@ -204,7 +204,7 @@ export class MediaService implements OnModuleInit {
             });
             
             // Re-use BigBuckBunny link for now as reliable playback
-            series.filePath = "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"; 
+            series.filePath = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"; 
             
             const savedSeries = await this.mediaRepository.save(series);
 
@@ -221,7 +221,7 @@ export class MediaService implements OnModuleInit {
                     seasonNumber: ep.s,
                     episodeNumber: ep.e,
                     overview: ep.overview,
-                    filePath: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4", // Mock video
+                    filePath: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4", // Mock video
                     mediaId: savedSeries.id,
                     stillUrl: `https://placehold.co/1920x1080/1a1a1a/ffffff?text=S${ep.s}E${ep.e}`
                 }));
@@ -236,6 +236,29 @@ export class MediaService implements OnModuleInit {
      * Enhances media with metadata from TMDB
      * This is a utility method that can be called during scanning or manually
      */
+    async getEpisode(id: string): Promise<Episode & { playbackUrl?: string }> {
+        const episode = await this.episodeRepository.findOne({
+            where: { id },
+            relations: ['media']
+        });
+        if (!episode) return null;
+
+        const result: Episode & { playbackUrl?: string } = { ...episode };
+
+        if (episode.filePath.startsWith('minio:')) {
+            const url = await this.getPresignedUrl(episode.filePath);
+            if (url) {
+                result.playbackUrl = url;
+            }
+        } else if (episode.filePath.startsWith('http://') || episode.filePath.startsWith('https://')) {
+            result.playbackUrl = episode.filePath;
+        } else {
+            const fileName = path.basename(episode.filePath);
+            result.playbackUrl = `/media/${encodeURIComponent(fileName)}`;
+        }
+        return result;
+    }
+
     async enhanceMediaMetadata(media: Media): Promise<Media> {
         try {
             if (media.type === 'movie') {
@@ -481,5 +504,92 @@ export class MediaService implements OnModuleInit {
     async checkFavorite(userId: string, mediaId: string): Promise<boolean> {
         const count = await this.favoriteRepository.count({ where: { userId, mediaId } });
         return count > 0;
+    }
+
+    // Admin CRUD Methods
+    async createMedia(dto: any, files: any): Promise<Media> {
+        const media = this.mediaRepository.create({
+            title: dto.title,
+            type: dto.type,
+            year: dto.year ? parseInt(dto.year) : undefined,
+            overview: dto.overview,
+        });
+
+        // Handle file uploads
+        if (files.videoFile && files.videoFile[0]) {
+            media.filePath = `/files/uploads/videos/${files.videoFile[0].filename}`;
+        }
+        if (files.posterFile && files.posterFile[0]) {
+            media.posterUrl = `/files/uploads/images/${files.posterFile[0].filename}`;
+        }
+        if (files.backdropFile && files.backdropFile[0]) {
+            media.backdropUrl = `/files/uploads/images/${files.backdropFile[0].filename}`;
+        }
+
+        // Save media first
+        const savedMedia = await this.mediaRepository.save(media);
+
+        // If TMDB ID provided, fetch metadata
+        if (dto.tmdbId) {
+            try {
+                await this.enrichMediaWithTmdb(savedMedia.id, dto.tmdbId, dto.type);
+            } catch (e) {
+                this.logger.warn(`Failed to fetch TMDB metadata for ${dto.tmdbId}`, e);
+            }
+        }
+
+        return savedMedia;
+    }
+
+    async updateMedia(id: string, dto: any, files: any): Promise<Media> {
+        const media = await this.mediaRepository.findOne({ where: { id } });
+        if (!media) {
+            throw new Error('Media not found');
+        }
+
+        // Update basic fields
+        if (dto.title) media.title = dto.title;
+        if (dto.type) media.type = dto.type;
+        if (dto.year) media.year = parseInt(dto.year);
+        if (dto.overview) media.overview = dto.overview;
+
+        // Handle file uploads (only if new files provided)
+        if (files.videoFile && files.videoFile[0]) {
+            media.filePath = `/files/uploads/videos/${files.videoFile[0].filename}`;
+        }
+        if (files.posterFile && files.posterFile[0]) {
+            media.posterUrl = `/files/uploads/images/${files.posterFile[0].filename}`;
+        }
+        if (files.backdropFile && files.backdropFile[0]) {
+            media.backdropUrl = `/files/uploads/images/${files.backdropFile[0].filename}`;
+        }
+
+        return this.mediaRepository.save(media);
+    }
+
+    async deleteMedia(id: string): Promise<void> {
+        const media = await this.mediaRepository.findOne({ where: { id } });
+        if (!media) {
+            throw new Error('Media not found');
+        }
+
+        // TODO: Delete associated files from filesystem
+        // This is a future enhancement for production
+
+        await this.mediaRepository.remove(media);
+    }
+
+    private async enrichMediaWithTmdb(mediaId: string, tmdbId: string, mediaType: string): Promise<void> {
+        const type = mediaType === 'series' || mediaType === 'tv' ? 'tv' : 'movie';
+        const metadata = await this.tmdbService.getDetails(type, parseInt(tmdbId));
+
+        if (metadata) {
+            await this.mediaRepository.update(mediaId, {
+                overview: metadata.overview || undefined,
+                year: metadata.year || undefined,
+                posterUrl: metadata.posterUrl || undefined,
+                backdropUrl: metadata.backdropUrl || undefined,
+            });
+        }
     }
 }
