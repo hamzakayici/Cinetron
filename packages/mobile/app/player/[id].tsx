@@ -2,10 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, Pressable, Platform } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Video, ResizeMode, AVPlaybackStatus } from 'expo-av';
-import { getMediaDetail, getEpisodeDetail } from '../../services/api';
+import { Play, Pause, SkipBack, SkipForward, X, Subtitles as SubtitlesIcon, Check } from 'lucide-react-native';
+import { getMediaDetail, getEpisodeDetail, getSubtitles } from '../../services/api';
 import Slider from '@react-native-community/slider';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Play, Pause, SkipBack, SkipForward, X } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 
 const isTV = Platform.isTV || Platform.OS === 'android';
@@ -24,6 +24,13 @@ export default function PlayerScreen() {
     const [showControls, setShowControls] = useState(true);
     const controlsTimeout = useRef<NodeJS.Timeout | null>(null);
 
+    // Subtitle State
+    const [subtitles, setSubtitles] = useState<any[]>([]);
+    const [activeSubtitle, setActiveSubtitle] = useState<string | null>(null);
+    const [cues, setCues] = useState<any[]>([]);
+    const [currentCue, setCurrentCue] = useState<string | null>(null);
+    const [showSubtitleMenu, setShowSubtitleMenu] = useState(false);
+
     useEffect(() => {
         loadMedia();
     }, [id]);
@@ -32,19 +39,58 @@ export default function PlayerScreen() {
         try {
             if (!id || typeof id !== 'string') return;
             const isEpisode = id.includes('episode-');
-            const data = isEpisode ? await getEpisodeDetail(id) : await getMediaDetail(id);
-            setPlaybackUrl(data.playbackUrl);
-            setTitle(data.title);
+            const [mediaData, subData] = await Promise.all([
+                isEpisode ? await getEpisodeDetail(id) : await getMediaDetail(id),
+                getSubtitles(id)
+            ]);
+            
+            setPlaybackUrl(mediaData.playbackUrl);
+            setTitle(mediaData.title);
+            setSubtitles(subData);
         } catch (error) {
             console.error('Failed to load media:', error);
         }
     };
 
+    // Fetch and parse subtitle content when active subtitle changes
+    useEffect(() => {
+        const loadSubtitleContent = async () => {
+            if (!activeSubtitle) {
+                setCues([]);
+                setCurrentCue(null);
+                return;
+            }
+            
+            const sub = subtitles.find(s => s.id === activeSubtitle);
+            if (!sub) return;
+
+            try {
+                const response = await fetch(sub.url);
+                const text = await response.text();
+                const parsedCues = parseSubtitles(text);
+                setCues(parsedCues);
+            } catch (error) {
+                console.error("Failed to load subtitle content", error);
+            }
+        };
+        loadSubtitleContent();
+    }, [activeSubtitle]);
+
     const handlePlaybackStatusUpdate = (status: AVPlaybackStatus) => {
         if (status.isLoaded) {
             setIsPlaying(status.isPlaying);
             setDuration(status.durationMillis || 0);
-            setPosition(status.positionMillis || 0);
+            
+            const pos = status.positionMillis || 0;
+            setPosition(pos);
+
+            // Find active cue
+            if (cues.length > 0) {
+                const active = cues.find(cue => pos >= cue.start && pos <= cue.end);
+                setCurrentCue(active ? active.text : null);
+            } else {
+                setCurrentCue(null);
+            }
         }
     };
 
@@ -134,8 +180,14 @@ export default function PlayerScreen() {
                                 </TouchableOpacity>
                             </View>
 
-                            {/* Center Controls */}
                             <View className="flex-1 justify-center items-center">
+                                {/* Subtitle Overlay */}
+                                {currentCue && (
+                                    <View className="absolute bottom-32 px-12 bg-black/60 rounded p-2 mb-8">
+                                        <Text className="text-white text-3xl font-sans text-center shadow-md">{currentCue}</Text>
+                                    </View>
+                                )}
+
                                 <View className="flex-row items-center gap-12">
                                     <TouchableOpacity
                                         onPress={() => skip(-10)}
@@ -222,6 +274,13 @@ export default function PlayerScreen() {
                         </View>
 
                         <View className="flex-1 justify-center items-center">
+                            {/* Subtitle Overlay */}
+                            {currentCue && (
+                                <View className="absolute bottom-24 px-4 bg-black/50 rounded p-1 mb-8 max-w-[90%]">
+                                    <Text className="text-white text-base font-sans text-center shadow-sm">{currentCue}</Text>
+                                </View>
+                            )}
+
                             <View className="flex-row items-center gap-8">
                                 <TouchableOpacity
                                     onPress={() => skip(-10)}
@@ -247,6 +306,45 @@ export default function PlayerScreen() {
                                 </TouchableOpacity>
                             </View>
                         </View>
+                        
+                        {/* Subtitle Button (Top Right) */}
+                         <View className="absolute top-20 right-6 z-50">
+                            <TouchableOpacity 
+                                onPress={() => setShowSubtitleMenu(!showSubtitleMenu)}
+                                className="bg-black/60 p-2 rounded-full"
+                            >
+                                <SubtitlesIcon size={24} color={activeSubtitle ? "#8b5cf6" : "white"} />
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Subtitle Menu Modal */}
+                        {showSubtitleMenu && (
+                            <Pressable 
+                                className="absolute inset-0 bg-black/80 justify-center items-center z-50"
+                                onPress={() => setShowSubtitleMenu(false)}
+                            >
+                                <View className="bg-gray-900 w-3/4 rounded-xl overflow-hidden border border-white/10">
+                                    <Text className="text-white font-bold p-4 bg-gray-800 border-b border-white/10">Altyazılar</Text>
+                                    <TouchableOpacity
+                                        onPress={() => { setActiveSubtitle(null); setShowSubtitleMenu(false); }}
+                                        className="p-4 border-b border-white/5 flex-row justify-between"
+                                    >
+                                        <Text className="text-white">Kapalı</Text>
+                                        {!activeSubtitle && <Check size={20} color="#8b5cf6" />}
+                                    </TouchableOpacity>
+                                    {subtitles.map(sub => (
+                                        <TouchableOpacity
+                                            key={sub.id}
+                                            onPress={() => { setActiveSubtitle(sub.id); setShowSubtitleMenu(false); }}
+                                            className="p-4 border-b border-white/5 flex-row justify-between"
+                                        >
+                                            <Text className="text-white">{sub.label} ({sub.language})</Text>
+                                            {activeSubtitle === sub.id && <Check size={20} color="#8b5cf6" />}
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            </Pressable>
+                        )}
 
                         <View 
                             className="absolute bottom-0 left-0 right-0 p-6"
@@ -275,3 +373,48 @@ export default function PlayerScreen() {
         </View>
     );
 }
+// Basic SRT/VTT Parser
+const parseSubtitles = (text: string) => {
+    const cues = [];
+    const lines = text.replace(/\r/g, '').split('\n');
+    let start: number | null = null;
+    let end: number | null = null;
+    let payload = [];
+    
+    // Time regex: 00:00:20,000 or 00:00:20.000
+    const timeRegex = /(\d{2}):(\d{2}):(\d{2})[.,](\d{3})/;
+    
+    const timeToMs = (timeStr: string) => {
+        const match = timeStr.match(timeRegex);
+        if (!match) return 0;
+        const [_, h, m, s, ms] = match;
+        return (parseInt(h) * 3600 + parseInt(m) * 60 + parseInt(s)) * 1000 + parseInt(ms);
+    };
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        
+        if (line.includes('-->')) {
+            const times = line.split('-->');
+            start = timeToMs(times[0].trim());
+            end = timeToMs(times[1].trim());
+            payload = [];
+        } else if (line === '' && start !== null && end !== null) {
+            cues.push({ start, end, text: payload.join('\n') });
+            start = null;
+            end = null;
+            payload = [];
+        } else if (start !== null) {
+            // Skip index numbers if they appear solely on a line
+            if (!/^\d+$/.test(line)) {
+                payload.push(line);
+            }
+        }
+    }
+    // Push last cue if file doesn't end with empty line
+    if (start !== null && end !== null && payload.length > 0) {
+        cues.push({ start, end, text: payload.join('\n') });
+    }
+    
+    return cues;
+};

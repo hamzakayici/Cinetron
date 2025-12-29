@@ -85,5 +85,10 @@ export const toggleFavorite = async (mediaId: string) => {
     return response.data;
 };
 
+export const getSubtitles = async (mediaId: string) => {
+    const response = await api.get(`/media/${mediaId}/subtitles`);
+    return response.data;
+};
+
 export default api;
 
