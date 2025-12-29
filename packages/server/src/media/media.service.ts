@@ -15,6 +15,7 @@ const VIDEO_EXTENSIONS = ['.mp4', '.mkv', '.avi', '.mov', '.webm'];
 
 import { WatchHistory } from './watch-history.entity';
 import { Favorite } from '../users/favorite.entity';
+import { Subtitle } from './subtitle.entity';
 
 @Injectable()
 export class MediaService implements OnModuleInit {
@@ -36,6 +37,8 @@ export class MediaService implements OnModuleInit {
         private historyRepository: Repository<WatchHistory>,
         @InjectRepository(Favorite)
         private favoriteRepository: Repository<Favorite>,
+        @InjectRepository(Subtitle)
+        private subtitleRepository: Repository<Subtitle>,
         @InjectQueue('media') private mediaQueue: Queue,
         private readonly tmdbService: TmdbService,
     ) {
@@ -599,4 +602,27 @@ export class MediaService implements OnModuleInit {
         }
     }
     */
+
+    // Subtitle Management
+    async addSubtitle(mediaId: string, filename: string, language: string, label: string) {
+        const subtitle = this.subtitleRepository.create({
+            mediaId,
+            url: `/files/uploads/subtitles/${filename}`,
+            language,
+            label,
+        });
+        return this.subtitleRepository.save(subtitle);
+    }
+
+    async getSubtitles(mediaId: string) {
+        return this.subtitleRepository.find({
+            where: { mediaId },
+            order: { createdAt: 'ASC' },
+        });
+    }
+
+    async deleteSubtitle(subtitleId: string) {
+        // TODO: Delete file from filesystem
+        return this.subtitleRepository.delete(subtitleId);
+    }
 }

@@ -1,5 +1,5 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Request, Delete, Put, UseInterceptors, UploadedFiles } from '@nestjs/common';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { Controller, Get, Post, Body, Param, UseGuards, Request, Delete, Put, UseInterceptors, UploadedFiles, UploadedFile } from '@nestjs/common';
+import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import { extname } from 'path';
@@ -167,5 +167,50 @@ export class MediaController {
     @ApiOperation({ summary: 'Delete media (admin only)' })
     async deleteMedia(@Param('id') id: string) {
         return this.mediaService.deleteMedia(id);
+    }
+
+    // Subtitle endpoints
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
+    @Roles(UserRole.ADMIN)
+    @Post(':id/subtitles')
+    @ApiOperation({ summary: 'Upload subtitle for media (admin only)' })
+    @ApiConsumes('multipart/form-data')
+    @UseInterceptors(
+        FileInterceptor('subtitleFile', {
+            storage: diskStorage({
+                destination: './public/uploads/subtitles',
+                filename: (req, file, cb) => {
+                    const ext = extname(file.originalname);
+                    cb(null, `${uuidv4()}${ext}`);
+                },
+            }),
+        }),
+    )
+    async uploadSubtitle(
+        @Param('id') mediaId: string,
+        @UploadedFile() file: Express.Multer.File,
+        @Body('language') language: string,
+        @Body('label') label: string,
+    ) {
+        return this.mediaService.addSubtitle(mediaId, file.filename, language, label);
+    }
+
+    @Get(':id/subtitles')
+    @ApiOperation({ summary: 'Get all subtitles for media' })
+    async getSubtitles(@Param('id') mediaId: string) {
+        return this.mediaService.getSubtitles(mediaId);
+    }
+
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
+    @Roles(UserRole.ADMIN)
+    @Delete(':id/subtitles/:subtitleId')
+    @ApiOperation({ summary: 'Delete subtitle (admin only)' })
+    async deleteSubtitle(
+        @Param('id') mediaId: string,
+        @Param('subtitleId') subtitleId: string,
+    ) {
+        return this.mediaService.deleteSubtitle(subtitleId);
     }
 }
