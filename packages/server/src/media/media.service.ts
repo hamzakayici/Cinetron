@@ -125,6 +125,8 @@ export class MediaService implements OnModuleInit {
             if (url) {
                 result.playbackUrl = url;
             }
+        } else if (media.filePath.startsWith('http://') || media.filePath.startsWith('https://')) {
+            result.playbackUrl = media.filePath;
         } else {
             const fileName = path.basename(media.filePath);
             result.playbackUrl = `/media/${encodeURIComponent(fileName)}`;
