@@ -84,7 +84,7 @@ const Library = () => {
                 </div>
 
                 {/* Hero Content */}
-                <div className="relative z-10 flex h-full flex-col justify-end px-4 md:px-16 pb-24 max-w-4xl">
+                <div className="relative z-10 flex h-full flex-col justify-end px-4 md:px-16 pb-48 max-w-4xl">
                     <motion.h1
                         initial={{ opacity: 0, y: 40 }}
                         animate={{ opacity: 1, y: 0 }}
