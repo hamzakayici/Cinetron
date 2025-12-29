@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Edit, Trash2, FileVideo, Image as ImageIcon, Plus, X, Subtitles } from 'lucide-react';
-import { getMedia, createMedia, updateMedia, deleteMedia, getSubtitles, uploadSubtitle, deleteSubtitle } from '../../services/api';
+import { Upload, Trash2, Edit2, Plus, Film, Image as ImageIcon, Search, Filter, Subtitles as SubtitlesIcon, X, FileText, Check } from 'lucide-react';
+import { useUploadQueue } from '../../context/UploadQueueContext';
+import { getMedia, updateMedia, deleteMedia, getSubtitles, uploadSubtitle, deleteSubtitle } from '../../services/api';
 
 interface Media {
     id: string;
@@ -24,28 +25,35 @@ interface Subtitle {
 const MediaManagement = () => {
     const [mediaList, setMediaList] = useState<Media[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    
+    // Modals
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showSubtitleModal, setShowSubtitleModal] = useState(false);
+    
     const [selectedMedia, setSelectedMedia] = useState<Media | null>(null);
-    const [uploading, setUploading] = useState(false);
+    
+    // Upload Queue
+    const { addToQueue } = useUploadQueue();
 
-    // Form state
+    // Form data
     const [formData, setFormData] = useState({
         title: '',
+        originalTitle: '',
+        overview: '',
+        releaseDate: '',
         type: 'movie' as 'movie' | 'series' | 'tv',
-        year: '',
-        overview: ''
     });
 
     const [files, setFiles] = useState<{
-        videoFile: File | null;
-        posterFile: File | null;
-        backdropFile: File | null;
+        video: File | null;
+        poster: File | null;
+        backdrop: File | null;
     }>({
-        videoFile: null,
-        posterFile: null,
-        backdropFile: null
+        video: null,
+        poster: null,
+        backdrop: null
     });
 
     // Subtitle state
@@ -75,54 +83,57 @@ const MediaManagement = () => {
         if (file) {
             setFiles(prev => ({
                 ...prev,
-                [`${type}File`]: file
+                [type]: file
             }));
         }
     };
 
     const handleUpload = async (e: React.FormEvent) => {
         e.preventDefault();
-        setUploading(true);
-
-        try {
-            const formDataToSend = new FormData();
-            formDataToSend.append('title', formData.title);
-            formDataToSend.append('type', formData.type);
-            if (formData.year) formDataToSend.append('year', formData.year);
-            if (formData.overview) formDataToSend.append('overview', formData.overview);
-
-            if (files.videoFile) formDataToSend.append('videoFile', files.videoFile);
-            if (files.posterFile) formDataToSend.append('posterFile', files.posterFile);
-            if (files.backdropFile) formDataToSend.append('backdropFile', files.backdropFile);
-
-            await createMedia(formDataToSend);
-            alert('Media uploaded successfully!');
-            setShowUploadModal(false);
-            resetForm();
-            fetchMedia();
-        } catch (err) {
-            console.error('Upload failed', err);
-            alert('Upload failed. Check console for details.');
-        } finally {
-            setUploading(false);
+        
+        // Validation
+        if (!files.video) {
+            alert("Video file is required");
+            return;
         }
+        if (!formData.title) {
+            alert("Title is required");
+            return;
+        }
+
+        // Add to Queue
+        addToQueue(
+            {
+                video: files.video,
+                poster: files.poster || undefined,
+                backdrop: files.backdrop || undefined
+            },
+            {
+                ...formData,
+                type: formData.type as 'movie' | 'series' | 'tv'
+            }
+        );
+
+        // Reset and Close
+        setShowUploadModal(false);
+        resetForm();
     };
 
     const handleEdit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedMedia) return;
 
-        setUploading(true);
+        setIsSubmitting(true);
         try {
             const formDataToSend = new FormData();
             formDataToSend.append('title', formData.title);
             formDataToSend.append('type', formData.type);
-            if (formData.year) formDataToSend.append('year', formData.year);
+            if (formData.releaseDate) formDataToSend.append('year', formData.releaseDate);
             if (formData.overview) formDataToSend.append('overview', formData.overview);
 
-            if (files.videoFile) formDataToSend.append('videoFile', files.videoFile);
-            if (files.posterFile) formDataToSend.append('posterFile', files.posterFile);
-            if (files.backdropFile) formDataToSend.append('backdropFile', files.backdropFile);
+            if (files.video) formDataToSend.append('videoFile', files.video);
+            if (files.poster) formDataToSend.append('posterFile', files.poster);
+            if (files.backdrop) formDataToSend.append('backdropFile', files.backdrop);
 
             await updateMedia(selectedMedia.id, formDataToSend);
             alert('Media updated successfully!');
@@ -133,7 +144,7 @@ const MediaManagement = () => {
             console.error('Update failed', err);
             alert('Update failed');
         } finally {
-            setUploading(false);
+            setIsSubmitting(false);
         }
     };
 
@@ -151,8 +162,8 @@ const MediaManagement = () => {
     };
 
     const resetForm = () => {
-        setFormData({ title: '', type: 'movie', year: '', overview: '' });
-        setFiles({ videoFile: null, posterFile: null, backdropFile: null });
+        setFormData({ title: '', originalTitle: '', overview: '', releaseDate: '', type: 'movie' });
+        setFiles({ video: null, poster: null, backdrop: null });
         setSelectedMedia(null);
     };
 
@@ -160,8 +171,9 @@ const MediaManagement = () => {
         setSelectedMedia(media);
         setFormData({
             title: media.title,
+            originalTitle: '',
             type: media.type,
-            year: media.year?.toString() || '',
+            releaseDate: media.year?.toString() || '',
             overview: media.overview || ''
         });
         setShowEditModal(true);
@@ -221,13 +233,16 @@ const MediaManagement = () => {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold">Media Management</h2>
-                <button
-                    onClick={() => setShowUploadModal(true)}
-                    className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                >
-                    <Plus size={20} />
-                    Upload Media
-                </button>
+                <div className="flex gap-2">
+                     {/* Search/Filter UI Placeholder */}
+                    <button
+                        onClick={() => setShowUploadModal(true)}
+                        className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                    >
+                        <Plus size={20} />
+                        Upload Media
+                    </button>
+                </div>
             </div>
 
             {/* Media Grid */}
@@ -262,14 +277,14 @@ const MediaManagement = () => {
                                         className="p-2 bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors"
                                         title="Edit"
                                     >
-                                        <Edit size={18} />
+                                        <Edit2 size={18} />
                                     </button>
                                     <button
                                         onClick={() => openSubtitleModal(media)}
                                         className="p-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
                                         title="Manage Subtitles"
                                     >
-                                        <Subtitles size={18} />
+                                        <SubtitlesIcon size={18} />
                                     </button>
                                     <button
                                         onClick={() => handleDelete(media.id)}
@@ -328,8 +343,8 @@ const MediaManagement = () => {
                                     <label className="block text-sm font-medium text-white/60 mb-1">Year</label>
                                     <input
                                         type="number"
-                                        value={formData.year}
-                                        onChange={e => setFormData({ ...formData, year: e.target.value })}
+                                        value={formData.releaseDate}
+                                        onChange={e => setFormData({ ...formData, releaseDate: e.target.value })}
                                         className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-2 focus:border-primary-500 outline-none"
                                     />
                                 </div>
@@ -345,24 +360,24 @@ const MediaManagement = () => {
                                 />
                             </div>
 
-                            <FileInput label="Video File" icon={FileVideo} accept="video/*" onChange={e => handleFileChange(e, 'video')} file={files.videoFile} />
-                            <FileInput label="Poster Image" icon={ImageIcon} accept="image/*" onChange={e => handleFileChange(e, 'poster')} file={files.posterFile} />
-                            <FileInput label="Backdrop Image" icon={ImageIcon} accept="image/*" onChange={e => handleFileChange(e, 'backdrop')} file={files.backdropFile} />
+                            <FileInput label="Video File" icon={Film} accept="video/*" onChange={e => handleFileChange(e, 'video')} file={files.video} />
+                            <FileInput label="Poster Image" icon={ImageIcon} accept="image/*" onChange={e => handleFileChange(e, 'poster')} file={files.poster} />
+                            <FileInput label="Backdrop Image" icon={ImageIcon} accept="image/*" onChange={e => handleFileChange(e, 'backdrop')} file={files.backdrop} />
 
                             <div className="flex gap-4 pt-4">
                                 <button
                                     type="button"
-                                    onClick={() => { setShowUploadModal(false); resetForm(); }}
-                                    className="flex-1 py-2 rounded-lg font-medium hover:bg-white/10 transition-colors"
+                                    onClick={() => setShowUploadModal(false)}
+                                    className="flex-1 py-3 rounded-lg font-medium hover:bg-white/10 transition-colors"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
-                                    disabled={uploading}
-                                    className="flex-1 bg-primary-600 hover:bg-primary-700 disabled:opacity-50 py-2 rounded-lg font-bold transition-colors"
+                                    className="flex-1 bg-primary-600 hover:bg-primary-700 py-3 rounded-lg font-bold transition-colors flex items-center justify-center gap-2"
                                 >
-                                    {uploading ? 'Uploading...' : 'Upload'}
+                                    <Upload size={20} />
+                                    Add to Queue
                                 </button>
                             </div>
                         </form>
@@ -384,7 +399,7 @@ const MediaManagement = () => {
                                     className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-2 focus:border-primary-500 outline-none"
                                 />
                             </div>
-
+                            
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-white/60 mb-1">Type *</label>
@@ -402,8 +417,8 @@ const MediaManagement = () => {
                                     <label className="block text-sm font-medium text-white/60 mb-1">Year</label>
                                     <input
                                         type="number"
-                                        value={formData.year}
-                                        onChange={e => setFormData({ ...formData, year: e.target.value })}
+                                        value={formData.releaseDate}
+                                        onChange={e => setFormData({ ...formData, releaseDate: e.target.value })}
                                         className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-2 focus:border-primary-500 outline-none"
                                     />
                                 </div>
@@ -420,9 +435,9 @@ const MediaManagement = () => {
                             </div>
 
                             <p className="text-sm text-white/40">Leave file inputs empty to keep existing files</p>
-                            <FileInput label="Video File" icon={FileVideo} accept="video/*" onChange={e => handleFileChange(e, 'video')} file={files.videoFile} />
-                            <FileInput label="Poster Image" icon={ImageIcon} accept="image/*" onChange={e => handleFileChange(e, 'poster')} file={files.posterFile} />
-                            <FileInput label="Backdrop Image" icon={ImageIcon} accept="image/*" onChange={e => handleFileChange(e, 'backdrop')} file={files.backdropFile} />
+                            <FileInput label="Video File" icon={Film} accept="video/*" onChange={e => handleFileChange(e, 'video')} file={files.video} />
+                            <FileInput label="Poster Image" icon={ImageIcon} accept="image/*" onChange={e => handleFileChange(e, 'poster')} file={files.poster} />
+                            <FileInput label="Backdrop Image" icon={ImageIcon} accept="image/*" onChange={e => handleFileChange(e, 'backdrop')} file={files.backdrop} />
 
                             <div className="flex gap-4 pt-4">
                                 <button
@@ -434,10 +449,10 @@ const MediaManagement = () => {
                                 </button>
                                 <button
                                     type="submit"
-                                    disabled={uploading}
+                                    disabled={isSubmitting}
                                     className="flex-1 bg-primary-600 hover:bg-primary-700 disabled:opacity-50 py-2 rounded-lg font-bold transition-colors"
                                 >
-                                    {uploading ? 'Updating...' : 'Update'}
+                                    {isSubmitting ? 'Updating...' : 'Update'}
                                 </button>
                             </div>
                         </form>
@@ -481,7 +496,7 @@ const MediaManagement = () => {
                                 </div>
                                 <FileInput
                                     label="Subtitle File (.srt, .vtt)"
-                                    icon={Subtitles}
+                                    icon={SubtitlesIcon}
                                     accept=".srt,.vtt"
                                     onChange={e => setSubtitleFile(e.target.files?.[0] || null)}
                                     file={subtitleFile}

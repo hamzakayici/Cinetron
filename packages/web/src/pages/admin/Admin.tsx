@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useTranslation } from 'react-i18next';
 import MediaManagement from '../../components/admin/MediaManagement';
+import { UploadQueueProvider } from '../../context/UploadQueueContext';
+import UploadManager from '../../components/admin/UploadManager';
 
 const Admin = () => {
     const { t } = useTranslation();
@@ -42,8 +44,9 @@ const Admin = () => {
     };
 
     return (
-        <div className="max-w-4xl mx-auto pt-10 px-6 pb-20">
-            <h1 className="text-3xl font-bold mb-8">{t('sidebar.settings')}</h1>
+        <UploadQueueProvider>
+            <div className="max-w-4xl mx-auto pt-10 px-6 pb-20">
+                <h1 className="text-3xl font-bold mb-8">{t('sidebar.settings')}</h1>
 
             {/* Tabs */}
             <div className="flex gap-4 mb-8 border-b border-white/10">
@@ -163,7 +166,10 @@ const Admin = () => {
                     </div>
                 </div>
             )}
-        </div>
+            {/* Upload Manager UI */}
+            <UploadManager />
+            </div>
+        </UploadQueueProvider>
     );
 };
 
