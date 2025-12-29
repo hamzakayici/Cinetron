@@ -92,7 +92,7 @@ const Admin = () => {
                 <div className="bg-surface rounded-xl p-6 border border-white/5">
                     <h2 className="text-xl font-semibold mb-4">Library Management</h2>
                     <p className="text-white/60 mb-6">
-                        Scan your MinIO bucket (bucket: <strong>filmler</strong>) for new content. System will automatically access the cloud storage.
+                        Scan local file storage (<strong>/public/uploads/</strong>) for new content. This is a legacy feature - you can now upload media directly via the "Media" tab.
                     </p>
 
                     <div className="flex items-center gap-4">
