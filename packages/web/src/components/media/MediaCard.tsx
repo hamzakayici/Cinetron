@@ -17,7 +17,7 @@ const MediaCard = ({ media, aspect = 'poster' }: MediaCardProps) => {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ margin: "-50px" }}
             onClick={() => navigate(`/title/${media.id}`)}
-            className={`relative flex-none snap-start cursor-pointer group ${aspect === 'video' ? 'w-80 aspect-video' : 'w-[200px] aspect-[2/3]'}`}
+            className={`relative flex-none snap-start cursor-pointer group hover:z-50 ${aspect === 'video' ? 'w-80 aspect-video' : 'w-[200px] aspect-[2/3]'}`}
         >
             <div className="absolute inset-0 rounded-md overflow-hidden transition-all duration-500 group-hover:scale-110 group-hover:z-50 group-hover:ring-4 ring-primary-500/0 group-hover:ring-primary-500 group-hover:shadow-[0_0_50px_rgba(0,0,0,0.8)] bg-surface">
                 <img
