@@ -1,42 +1,17 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
-import { scanLibrary } from '../../services/media';
 import api from '../../services/api';
 import { useTranslation } from 'react-i18next';
 import MediaManagement from '../../components/admin/MediaManagement';
 
 const Admin = () => {
-    const [scanning, setScanning] = useState(false);
-    const [result, setResult] = useState<{ message: string, added: number } | null>(null);
-    const [error, setError] = useState<string | null>(null);
-
     const { t } = useTranslation();
-    const [activeTab, setActiveTab] = useState<'media' | 'library' | 'users'>('media');
+    const [activeTab, setActiveTab] = useState<'media' | 'users'>('media');
     const [showUserModal, setShowUserModal] = useState(false);
     const [newUser, setNewUser] = useState({ email: '', password: '', role: 'viewer' });
 
-    const handleScan = async () => {
-        setScanning(true);
-        setResult(null);
-        setError(null);
-        try {
-            const res = await scanLibrary() as any; // Cast to any to handle new fields
-            setResult({ message: res.message, added: res.added });
-        } catch (err) {
-            setError("Scan failed. Check console or server logs.");
-        } finally {
-            setScanning(false);
-        }
-    };
+
 
     const [users, setUsers] = useState<any[]>([]);
-
-    useEffect(() => {
-        if (activeTab === 'users') {
-            fetchUsers();
-        }
-    }, [activeTab]);
 
     const fetchUsers = async () => {
         try {
@@ -46,6 +21,12 @@ const Admin = () => {
             console.error("Failed to fetch users", err);
         }
     };
+
+    useEffect(() => {
+        if (activeTab === 'users') {
+            fetchUsers();
+        }
+    }, [activeTab]);
 
     const handleCreateUser = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -73,12 +54,6 @@ const Admin = () => {
                     Media
                 </button>
                 <button
-                    onClick={() => setActiveTab('library')}
-                    className={`pb-4 px-2 font-medium transition-colors ${activeTab === 'library' ? 'text-primary-500 border-b-2 border-primary-500' : 'text-white/60 hover:text-white'}`}
-                >
-                    Library
-                </button>
-                <button
                     onClick={() => setActiveTab('users')}
                     className={`pb-4 px-2 font-medium transition-colors ${activeTab === 'users' ? 'text-primary-500 border-b-2 border-primary-500' : 'text-white/60 hover:text-white'}`}
                 >
@@ -88,49 +63,7 @@ const Admin = () => {
 
             {activeTab === 'media' && <MediaManagement />}
 
-            {activeTab === 'library' && (
-                <div className="bg-surface rounded-xl p-6 border border-white/5">
-                    <h2 className="text-xl font-semibold mb-4">Library Management</h2>
-                    <p className="text-white/60 mb-6">
-                        Scan local file storage (<strong>/public/uploads/</strong>) for new content. This is a legacy feature - you can now upload media directly via the "Media" tab.
-                    </p>
 
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={handleScan}
-                            disabled={scanning}
-                            className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg transition-colors font-medium"
-                        >
-                            <RefreshCw className={`h-5 w-5 ${scanning ? 'animate-spin' : ''}`} />
-                            {scanning ? 'Scanning...' : 'Scan Library'}
-                        </button>
-
-                        {result && (
-                            <div className="flex flex-col gap-2">
-                                <motion.div
-                                    initial={{ opacity: 0, x: -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    className="flex items-center gap-2 text-green-400 bg-green-400/10 px-3 py-2 rounded-lg border border-green-400/20"
-                                >
-                                    <CheckCircle size={18} />
-                                    <span className="font-mono text-sm">{result.message}</span>
-                                </motion.div>
-                            </div>
-                        )}
-
-                        {error && (
-                            <motion.div
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                className="flex items-center gap-2 text-red-400 bg-red-400/10 px-3 py-2 rounded-lg"
-                            >
-                                <AlertCircle size={18} />
-                                <span>{error}</span>
-                            </motion.div>
-                        )}
-                    </div>
-                </div>
-            )}
 
             {activeTab === 'users' && (
                 <div className="space-y-6">
