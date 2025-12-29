@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Check, Globe, User, ArrowRight, Loader2 } from 'lucide-react';
+import { Check, User, Loader2 } from 'lucide-react';
 import api from '../../services/api';
 
 const Setup = () => {
-    const { t, i18n } = useTranslation();
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [step, setStep] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
@@ -21,10 +21,6 @@ const Setup = () => {
 
     const [error, setError] = useState('');
 
-    const changeLanguage = (lng: string) => {
-        i18n.changeLanguage(lng);
-    };
-
     const handleCreateAdmin = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
@@ -37,7 +33,7 @@ const Setup = () => {
             setTimeout(() => {
                 navigate('/login');
             }, 2000);
-            setStep(3); // Success step
+            setStep(2); // Success step
         } catch (err: any) {
             console.error(err);
             setError(err.response?.data?.message || 'Setup failed');
@@ -69,7 +65,7 @@ const Setup = () => {
                         <motion.div
                             className="h-full bg-primary-500"
                             initial={{ width: "0%" }}
-                            animate={{ width: `${(step / 3) * 100}%` }}
+                            animate={{ width: `${(step / 2) * 100}%` }}
                         />
                     </div>
 
@@ -78,51 +74,6 @@ const Setup = () => {
                             {step === 1 && (
                                 <motion.div
                                     key="step1"
-                                    initial={{ opacity: 0, x: 20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: -20 }}
-                                    className="space-y-8"
-                                >
-                                    <div className="text-center">
-                                        <h2 className="text-2xl font-bold mb-6 flex items-center justify-center gap-3">
-                                            <Globe className="text-primary-400" />
-                                            {t('welcome.selectLanguage')}
-                                        </h2>
-
-                                        <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
-                                            <button
-                                                onClick={() => changeLanguage('tr')}
-                                                className={`p-6 rounded-2xl border transition-all duration-300 ${i18n.language === 'tr' ? 'bg-primary-600/20 border-primary-500' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}
-                                            >
-                                                <div className="text-4xl mb-2">🇹🇷</div>
-                                                <div className="font-bold">Türkçe</div>
-                                            </button>
-
-                                            <button
-                                                onClick={() => changeLanguage('en')}
-                                                className={`p-6 rounded-2xl border transition-all duration-300 ${i18n.language === 'en' ? 'bg-primary-600/20 border-primary-500' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}
-                                            >
-                                                <div className="text-4xl mb-2">🇺🇸</div>
-                                                <div className="font-bold">English</div>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex justify-end pt-4">
-                                        <button
-                                            onClick={() => setStep(2)}
-                                            className="flex items-center gap-2 bg-white text-black px-8 py-3 rounded-xl font-bold hover:bg-white/90 transition-colors"
-                                        >
-                                            {t('welcome.next')}
-                                            <ArrowRight size={20} />
-                                        </button>
-                                    </div>
-                                </motion.div>
-                            )}
-
-                            {step === 2 && (
-                                <motion.div
-                                    key="step2"
                                     initial={{ opacity: 0, x: 20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: -20 }}
@@ -184,14 +135,7 @@ const Setup = () => {
                                             </div>
                                         )}
 
-                                        <div className="flex justify-between items-center pt-6">
-                                            <button
-                                                type="button"
-                                                onClick={() => setStep(1)}
-                                                className="text-white/60 hover:text-white transition-colors"
-                                            >
-                                                Back
-                                            </button>
+                                        <div className="flex justify-end items-center pt-6">
                                             <button
                                                 type="submit"
                                                 disabled={isLoading}
@@ -205,9 +149,9 @@ const Setup = () => {
                                 </motion.div>
                             )}
 
-                            {step === 3 && (
+                            {step === 2 && (
                                 <motion.div
-                                    key="step3"
+                                    key="step2"
                                     initial={{ opacity: 0, scale: 0.9 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     className="flex flex-col items-center justify-center text-center h-[300px]"

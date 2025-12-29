@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getMedia, type Media } from '../../services/media';
+import MediaCard from '../../components/media/MediaCard';
 
 
 
@@ -38,16 +39,16 @@ const Library = () => {
                         <Play size={40} className="text-primary-400 ml-2" />
                     </motion.div>
                     <h1 className="text-5xl font-black tracking-tighter bg-gradient-to-br from-white to-white/50 bg-clip-text text-transparent">
-                        Welcome to Cinetron
+                        {t('welcome.title')}
                     </h1>
                     <p className="text-xl text-white/60 font-medium leading-relaxed">
-                        Your personal streaming sanctuary is ready. Scan your library in settings to begin the experience.
+                        {t('welcome.subtitle')}
                     </p>
                     <button
                         onClick={() => navigate('/admin')}
                         className="mt-8 px-8 py-4 bg-white text-black font-bold rounded-lg hover:bg-primary-400 hover:text-white transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_40px_rgba(139,92,246,0.6)]"
                     >
-                        Go to Admin Panel
+                        {t('sidebar.settings')}
                     </button>
                 </div>
             </div>
@@ -88,15 +89,15 @@ const Library = () => {
                         initial={{ opacity: 0, y: 40 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.8, ease: "easeOut" }}
-                        className="mb-6 text-6xl md:text-8xl font-black tracking-tighter text-white drop-shadow-2xl"
+                        className="mb-6 text-5xl md:text-7xl font-black tracking-tighter text-white drop-shadow-2xl leading-tight"
                     >
                         {heroItem.title}
                     </motion.h1>
 
-                    <div className="flex items-center gap-4 mb-6 text-sm font-semibold text-green-400 tracking-wide">
-                        <span>98% Match</span>
-                        <span className="text-white/60">2024</span>
-                        <span className="px-2 py-0.5 border border-white/40 rounded text-xs text-white/80">4K</span>
+                    <div className="flex items-center gap-4 mb-8 text-sm font-semibold text-green-400 tracking-wide">
+                        <span>{heroItem.year || '2024'}</span>
+                        <span className="text-white/60">•</span>
+                        <span className="px-2 py-0.5 border border-white/40 rounded text-xs text-white/80 uppercase">{heroItem.type}</span>
                     </div>
 
                     <motion.p
@@ -116,16 +117,16 @@ const Library = () => {
                     >
                         <button
                             onClick={() => navigate(`/watch/${heroItem.id}`)}
-                            className="flex items-center gap-3 rounded bg-white px-8 py-3.5 text-lg font-bold text-black hover:bg-primary-400 hover:text-white transition-all duration-300 hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+                            className="flex items-center gap-3 rounded bg-white px-8 py-4 text-lg font-bold text-black hover:bg-primary-400 hover:text-white transition-all duration-300 hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.2)]"
                         >
-                            <Play fill="currentColor" size={28} />
+                            <Play fill="currentColor" size={24} />
                             {t('library.play')}
                         </button>
                         <button
                             onClick={() => navigate(`/title/${heroItem.id}`)}
-                            className="flex items-center gap-3 rounded bg-white/20 px-8 py-3.5 text-lg font-bold text-white backdrop-blur-md hover:bg-white/30 transition-all duration-300 hover:scale-105"
+                            className="flex items-center gap-3 rounded bg-white/20 px-8 py-4 text-lg font-bold text-white backdrop-blur-md hover:bg-white/30 transition-all duration-300 hover:scale-105"
                         >
-                            <Info size={28} />
+                            <Info size={24} />
                             {t('library.moreInfo')}
                         </button>
                     </motion.div>
@@ -133,13 +134,13 @@ const Library = () => {
             </div>
 
             {/* Content Rows */}
-            <div className="relative z-20 -mt-32 space-y-16 px-4 md:px-16">
+            <div className="relative z-20 -mt-32 space-y-12 px-4 md:px-16 pb-20">
                 {categories.map((category, idx) => (
                     category.items.length > 0 && (
                         <div key={idx} className="space-y-4">
-                            <h3 className="text-2xl font-bold text-white/90 ml-1 hover:text-primary-400 transition-colors cursor-pointer flex items-center gap-2 group">
+                            <h3 className="text-xl md:text-2xl font-bold text-white/90 ml-1 hover:text-primary-400 transition-colors cursor-pointer flex items-center gap-2 group">
                                 {category.title}
-                                <span className="text-xs opacity-0 -translate-x-2 group-hover:translate-x-0 group-hover:opacity-100 transition-all text-primary-400">View All &gt;</span>
+                                <span className="text-xs opacity-0 -translate-x-2 group-hover:translate-x-0 group-hover:opacity-100 transition-all text-primary-400 font-medium tracking-wider">Explore All &gt;</span>
                             </h3>
 
                             <div className="flex gap-4 overflow-x-auto pb-8 scrollbar-hide snap-x -mx-4 px-4 md:-mx-16 md:px-16">
@@ -150,35 +151,9 @@ const Library = () => {
                                         whileInView={{ opacity: 1, scale: 1 }}
                                         viewport={{ margin: "-50px" }}
                                         transition={{ duration: 0.4, delay: i * 0.05 }}
-                                        onClick={() => navigate(`/title/${item.id}`)}
-                                        className={`relative flex-none snap-start cursor-pointer group hover:z-50 ${category.aspect === 'video' ? 'w-80 aspect-video' : 'w-[200px] aspect-[2/3]'}`}
+                                        className="snap-start flex-none"
                                     >
-                                        <div className="absolute inset-0 rounded-md overflow-hidden transition-all duration-500 group-hover:scale-110 group-hover:z-50 group-hover:ring-4 ring-primary-500/0 group-hover:ring-primary-500 group-hover:shadow-[0_0_50px_rgba(0,0,0,0.8)] bg-surface">
-                                            <img
-                                                src={item.posterUrl || `https://placehold.co/400x600/1a1a1a/333333?text=${encodeURIComponent(item.title)}`}
-                                                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                                alt={item.title}
-                                            />
-
-                                            {/* Hover Overlay */}
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-4">
-                                                <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-                                                    <div className="flex items-center gap-2 mb-2">
-                                                        <button className="bg-white text-black p-2 rounded-full hover:scale-110 transition-transform">
-                                                            <Play size={12} fill="currentColor" />
-                                                        </button>
-                                                        <button className="border border-white/50 text-white p-2 rounded-full hover:bg-white/10 transition-colors">
-                                                            <Info size={12} />
-                                                        </button>
-                                                    </div>
-                                                    <h4 className="font-bold text-sm text-white drop-shadow-md mb-1">{item.title}</h4>
-                                                    <div className="flex items-center gap-2 text-[10px] font-medium text-green-400">
-                                                        <span>98% Match</span>
-                                                        <span className="text-white/60">{item.year || '2024'}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <MediaCard media={item} />
                                     </motion.div>
                                 ))}
                             </div>

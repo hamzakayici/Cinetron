@@ -156,8 +156,22 @@ export class MediaService implements OnModuleInit {
     }
 
     async seedMockData() {
-        // No mock data - User requested clean system
-        // This function is kept to satisfy potential calls but does nothing
+        const testTitle = "Big Buck Bunny";
+        const exists = await this.mediaRepository.findOneBy({ title: testTitle });
+        if (!exists) {
+            this.logger.log(`Seeding test video: ${testTitle}`);
+            const media = this.mediaRepository.create({
+                title: testTitle,
+                year: 2008,
+                overview: "A large and lovable rabbit deals with three tiny bullies, led by a flying squirrel, who are determined to squelch his happiness.",
+                filePath: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                type: 'movie',
+                posterUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Big_buck_bunny_poster_big.jpg/800px-Big_buck_bunny_poster_big.jpg",
+                backdropUrl: "https://peach.blender.org/wp-content/uploads/title_anouncement.jpg?x11217",
+                processed: true
+            });
+            await this.mediaRepository.save(media);
+        }
     }
 
     /**
@@ -279,6 +293,12 @@ export class MediaService implements OnModuleInit {
                         this.logger.log(`Dispatched metadata job for: ${name}`);
 
                         added++;
+                    } else {
+                        // Check if existing media needs metadata enhancement
+                        if (!exists.overview || exists.overview.startsWith('Auto-detected') || !exists.posterUrl || exists.posterUrl.includes('placehold.co')) {
+                            this.logger.log(`Re-queueing metadata enhancement for: ${exists.title}`);
+                            await this.mediaQueue.add('enhance', { mediaId: exists.id });
+                        }
                     }
                 }
 
