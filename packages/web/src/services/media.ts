@@ -7,6 +7,7 @@ export interface Media {
     overview?: string;
     filePath: string;
     type: 'movie' | 'tv' | 'series';
+    genres?: string[];
 }
 
 const API_URL = import.meta.env.VITE_API_URL || '';

@@ -14,6 +14,7 @@ interface Media {
     posterUrl?: string;
     backdropUrl?: string;
     filePath?: string;
+    genres?: string[];
 }
 
 interface Subtitle {
@@ -57,7 +58,8 @@ const MediaManagement = () => {
         posterUrl: '',
         backdropUrl: '',
         tmdbId: '',
-        videoUrl: ''
+        videoUrl: '',
+        genres: '' // Comma separated string for input
     });
 
     const [files, setFiles] = useState<{
@@ -130,7 +132,8 @@ const MediaManagement = () => {
             posterUrl: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '',
             backdropUrl: item.backdrop_path ? `https://image.tmdb.org/t/p/original${item.backdrop_path}` : '',
             tmdbId: item.id,
-            videoUrl: ''
+            videoUrl: '',
+            genres: ''
         });
         setShowImportModal(false);
         setShowUploadModal(true);
@@ -171,7 +174,8 @@ const MediaManagement = () => {
             },
             {
                 ...formData,
-                type: queueType
+                type: queueType,
+                genres: formData.genres ? formData.genres.split(',').map(g => g.trim()).filter(g => g) : undefined
             }
         );
 
@@ -194,6 +198,13 @@ const MediaManagement = () => {
             
             if (formData.posterUrl) formDataToSend.append('posterUrl', formData.posterUrl);
             if (formData.backdropUrl) formDataToSend.append('backdropUrl', formData.backdropUrl);
+            if (formData.tmdbId) formDataToSend.append('tmdbId', formData.tmdbId);
+            
+            // Genres
+            if (formData.genres) {
+                const genreList = formData.genres.split(',').map(g => g.trim()).filter(g => g);
+                genreList.forEach(g => formDataToSend.append('genres[]', g));
+            }
 
             // Handle Video Update (File or Link)
             // Existing logic only handled file. Let's assume edit also supports link now? 
@@ -232,7 +243,7 @@ const MediaManagement = () => {
     };
 
     const resetForm = () => {
-        setFormData({ title: '', originalTitle: '', overview: '', releaseDate: '', type: 'movie', posterUrl: '', backdropUrl: '', tmdbId: '', videoUrl: '' });
+        setFormData({ title: '', originalTitle: '', overview: '', releaseDate: '', type: 'movie', posterUrl: '', backdropUrl: '', tmdbId: '', videoUrl: '', genres: '' });
         setFiles({ video: null, poster: null, backdrop: null });
         setSelectedMedia(null);
         setImportQuery('');
@@ -252,7 +263,8 @@ const MediaManagement = () => {
             backdropUrl: media.backdropUrl || '',
             tmdbId: '',
             // If filePath starts with http, it's a link. Otherwise it's a file path but we can still populate videoUrl
-            videoUrl: media.filePath?.startsWith('http') ? media.filePath : '' 
+            videoUrl: media.filePath?.startsWith('http') ? media.filePath : '',
+            genres: media.genres ? media.genres.join(', ') : ''
         });
         setShowEditModal(true);
     };

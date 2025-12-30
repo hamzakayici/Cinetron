@@ -30,6 +30,9 @@ export class Media {
     @Column({ default: 'movie' })
     type: string; // 'movie' | 'tv' | 'series'
 
+    @Column("text", { array: true, default: [] })
+    genres: string[];
+
     @Column({ default: false })
     processed: boolean; // True if transcoding is done/not needed
 

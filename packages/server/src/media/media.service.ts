@@ -82,6 +82,7 @@ export class MediaService implements OnModuleInit {
                 posterUrl: 'https://image.tmdb.org/t/p/w500/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg',
                 backdropUrl: 'https://image.tmdb.org/t/p/original/kXfqcdQKsToO0OUXHcrrNCHDBzO.jpg',
                 filePath: '/files/uploads/videos/shawshank.mp4',
+                genres: ['Drama', 'Crime'],
             },
             {
                 title: 'The Godfather',
@@ -91,6 +92,7 @@ export class MediaService implements OnModuleInit {
                 posterUrl: 'https://image.tmdb.org/t/p/w500/3bhkrj58Vtu7enYsRolD1fZdja1.jpg',
                 backdropUrl: 'https://image.tmdb.org/t/p/original/tmU7GeKVybMWFButWEGl2M4GeiP.jpg',
                 filePath: '/files/uploads/videos/godfather.mp4',
+                genres: ['Drama', 'Crime'],
             },
             {
                 title: 'Interstellar',
@@ -100,6 +102,7 @@ export class MediaService implements OnModuleInit {
                 posterUrl: 'https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg',
                 backdropUrl: 'https://image.tmdb.org/t/p/original/pbrkL804c8yAv3zBZR4QPEafpAR.jpg',
                 filePath: '/files/uploads/videos/interstellar.mp4',
+                genres: ['Adventure', 'Drama', 'Science Fiction'],
             },
         ];
 
@@ -126,6 +129,14 @@ export class MediaService implements OnModuleInit {
             if (results && results.length > 0) {
                 const match = results[0];
                 
+                // Get full details to extract genres
+                let details;
+                if (type === 'movie') {
+                    details = await this.tmdbService.getMovieDetails(match.id);
+                } else {
+                    details = await this.tmdbService.getTvShowDetails(match.id);
+                }
+
                 // Update media with TMDB data
                 media.overview = match.overview || media.overview;
                 media.year = match.release_date ? new Date(match.release_date).getFullYear() : 
@@ -133,6 +144,10 @@ export class MediaService implements OnModuleInit {
                              media.year;
                 media.posterUrl = match.poster_path ? `https://image.tmdb.org/t/p/w500${match.poster_path}` : media.posterUrl;
                 media.backdropUrl = match.backdrop_path ? `https://image.tmdb.org/t/p/original${match.backdrop_path}` : media.backdropUrl;
+
+                if (details && details.genres) {
+                    media.genres = details.genres.map((g: any) => g.name);
+                }
 
                 await this.mediaRepository.save(media);
                 this.logger.log(`Enhanced metadata for: ${media.title}`);

@@ -139,7 +139,7 @@ const Library = () => {
             <div className="relative z-20 -mt-32 space-y-12 px-4 md:px-16 pb-20">
                 {categories.map((category, idx) => (
                     category.items.length > 0 && (
-                        <div key={idx} className="space-y-4">
+                        <div key={idx} className="space-y-4 relative hover:z-40 transition-all duration-300">
                             <h3 className="text-xl md:text-2xl font-bold text-white/90 ml-1 hover:text-primary-400 transition-colors cursor-pointer flex items-center gap-2 group">
                                 {category.title}
                                 <span className="text-xs opacity-0 -translate-x-2 group-hover:translate-x-0 group-hover:opacity-100 transition-all text-primary-400 font-medium tracking-wider">

@@ -10,6 +10,7 @@ export class CreateMediaDto {
     videoFile?: Express.Multer.File;
     posterFile?: Express.Multer.File;
     backdropFile?: Express.Multer.File;
+    genres?: string[];
 }
 
 export class UpdateMediaDto {
@@ -24,4 +25,5 @@ export class UpdateMediaDto {
     videoFile?: Express.Multer.File;
     posterFile?: Express.Multer.File;
     backdropFile?: Express.Multer.File;
+    genres?: string[];
 }
