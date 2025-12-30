@@ -4,6 +4,9 @@ export class CreateMediaDto {
     year?: number;
     overview?: string;
     tmdbId?: string;
+    posterUrl?: string; // TMDB URL
+    backdropUrl?: string; // TMDB URL
+    videoUrl?: string; // Direct Video URL
     videoFile?: Express.Multer.File;
     posterFile?: Express.Multer.File;
     backdropFile?: Express.Multer.File;
@@ -15,6 +18,9 @@ export class UpdateMediaDto {
     year?: number;
     overview?: string;
     tmdbId?: string;
+    posterUrl?: string;
+    backdropUrl?: string;
+    videoUrl?: string;
     videoFile?: Express.Multer.File;
     posterFile?: Express.Multer.File;
     backdropFile?: Express.Multer.File;

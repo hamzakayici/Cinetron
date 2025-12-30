@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Request, Delete, Put, UseInterceptors, UploadedFiles, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, Request, Delete, Put, UseInterceptors, UploadedFiles, UploadedFile, Query } from '@nestjs/common';
 import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
@@ -51,6 +51,12 @@ export class MediaController {
     @ApiOperation({ summary: 'Trigger directory scan for new media' })
     async scanLibrary() {
         return this.mediaService.scanLibrary();
+    }
+
+    @Get('metadata/search')
+    @ApiOperation({ summary: 'Search TMDB for metadata' })
+    async searchMetadata(@Query('q') query: string, @Query('type') type: 'movie' | 'tv', @Query('year') year?: number) {
+        return this.mediaService.searchTMDB(query, type, year);
     }
 
     @ApiBearerAuth()

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import api, { deleteUser, updateUserPassword } from '../../services/api';
 import { useTranslation } from 'react-i18next';
+import api, { deleteUser, updateUserPassword } from '../../services/api';
+
 import MediaManagement from '../../components/admin/MediaManagement';
 import { UploadQueueProvider } from '../../context/UploadQueueContext';
 import UploadManager from '../../components/admin/UploadManager';
@@ -79,22 +80,27 @@ const Admin = () => {
 
     return (
         <UploadQueueProvider>
-            <div className="max-w-6xl mx-auto pt-10 px-6 pb-20">
-                <h1 className="text-3xl font-bold mb-8">{t('sidebar.settings')}</h1>
+            <div className="p-8 max-w-[1600px] mx-auto pb-24">
+                <header className="mb-8">
+                    <h1 className="text-3xl font-bold mb-2">{t('admin.dashboard')}</h1>
+                    <p className="text-white/60">{t('admin.manageContent')}</p>
+                </header>
 
                 {/* Tabs */}
                 <div className="flex gap-4 mb-8 border-b border-white/10">
                     <button
                         onClick={() => setActiveTab('media')}
-                        className={`pb-4 px-2 font-medium transition-colors ${activeTab === 'media' ? 'text-primary-500 border-b-2 border-primary-500' : 'text-white/60 hover:text-white'}`}
+                        className={`pb-4 px-2 font-medium transition-colors relative ${activeTab === 'media' ? 'text-primary-400' : 'text-white/60 hover:text-white'}`}
                     >
-                        Media Management
+                        {t('admin.mediaManagement')}
+                        {activeTab === 'media' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary-500 rounded-t-full" />}
                     </button>
                     <button
                         onClick={() => setActiveTab('users')}
-                        className={`pb-4 px-2 font-medium transition-colors ${activeTab === 'users' ? 'text-primary-500 border-b-2 border-primary-500' : 'text-white/60 hover:text-white'}`}
+                        className={`pb-4 px-2 font-medium transition-colors relative ${activeTab === 'users' ? 'text-primary-400' : 'text-white/60 hover:text-white'}`}
                     >
-                        User Management
+                        {t('admin.userManagement')}
+                        {activeTab === 'users' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary-500 rounded-t-full" />}
                     </button>
                 </div>
 
@@ -103,13 +109,13 @@ const Admin = () => {
                 {activeTab === 'users' && (
                     <div className="space-y-6">
                         <div className="flex justify-between items-center">
-                            <h2 className="text-xl font-semibold">Users</h2>
+                            <h2 className="text-xl font-semibold">{t('admin.users')}</h2>
                             <button
                                 onClick={() => setShowCreateModal(true)}
                                 className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
                             >
                                 <UserPlus size={18} />
-                                Add User
+                                {t('admin.addUser')}
                             </button>
                         </div>
 
@@ -117,10 +123,10 @@ const Admin = () => {
                             <table className="w-full text-left">
                                 <thead className="bg-white/5 text-white/60 text-sm uppercase">
                                     <tr>
-                                        <th className="px-6 py-4">Email</th>
-                                        <th className="px-6 py-4">Name</th>
-                                        <th className="px-6 py-4">Role</th>
-                                        <th className="px-6 py-4 text-right">Actions</th>
+                                        <th className="px-6 py-4">{t('setup.email')}</th>
+                                        <th className="px-6 py-4">{t('setup.firstName')} & {t('setup.lastName')}</th>
+                                        <th className="px-6 py-4">{t('admin.role')}</th>
+                                        <th className="px-6 py-4 text-right">{t('admin.actions')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-white/5">
@@ -137,14 +143,14 @@ const Admin = () => {
                                                 <button
                                                     onClick={() => openPasswordModal(user)}
                                                     className="p-2 text-white/40 hover:text-primary-400 hover:bg-white/10 rounded mr-2 transition-colors"
-                                                    title="Change Password"
+                                                    title={t('admin.changePassword')}
                                                 >
                                                     <Key size={18} />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDeleteUser(user.id, user.email)}
                                                     className="p-2 text-white/40 hover:text-red-400 hover:bg-white/10 rounded transition-colors"
-                                                    title="Delete User"
+                                                    title={t('admin.actions')}
                                                 >
                                                     <Trash2 size={18} />
                                                 </button>
@@ -153,7 +159,7 @@ const Admin = () => {
                                     ))}
                                     {users.length === 0 && (
                                         <tr>
-                                            <td colSpan={4} className="px-6 py-8 text-center text-white/40">No users found.</td>
+                                            <td colSpan={4} className="px-6 py-8 text-center text-white/40">{t('admin.noResults')}</td>
                                         </tr>
                                     )}
                                 </tbody>
@@ -166,10 +172,10 @@ const Admin = () => {
                 {showCreateModal && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
                         <div className="bg-surface border border-white/10 rounded-2xl p-8 max-w-md w-full">
-                            <h2 className="text-2xl font-bold mb-6">Create New User</h2>
+                            <h2 className="text-2xl font-bold mb-6">{t('admin.createUser')}</h2>
                             <form onSubmit={handleCreateUser} className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-white/60 mb-1">Email</label>
+                                    <label className="block text-sm font-medium text-white/60 mb-1">{t('setup.email')}</label>
                                     <input
                                         type="email" required
                                         value={newUser.email}
@@ -179,7 +185,7 @@ const Admin = () => {
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-white/60 mb-1">First Name</label>
+                                        <label className="block text-sm font-medium text-white/60 mb-1">{t('setup.firstName')}</label>
                                         <input
                                             type="text"
                                             value={newUser.firstName}
@@ -188,7 +194,7 @@ const Admin = () => {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-white/60 mb-1">Last Name</label>
+                                        <label className="block text-sm font-medium text-white/60 mb-1">{t('setup.lastName')}</label>
                                         <input
                                             type="text"
                                             value={newUser.lastName}
@@ -198,7 +204,7 @@ const Admin = () => {
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-white/60 mb-1">Password</label>
+                                    <label className="block text-sm font-medium text-white/60 mb-1">{t('setup.password')}</label>
                                     <input
                                         type="password" required
                                         value={newUser.password}
@@ -207,7 +213,7 @@ const Admin = () => {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-white/60 mb-1">Role</label>
+                                    <label className="block text-sm font-medium text-white/60 mb-1">{t('admin.role')}</label>
                                     <select
                                         value={newUser.role}
                                         onChange={e => setNewUser({ ...newUser, role: e.target.value })}
@@ -223,13 +229,13 @@ const Admin = () => {
                                         onClick={() => setShowCreateModal(false)}
                                         className="flex-1 py-2 rounded-lg font-medium hover:bg-white/10 transition-colors"
                                     >
-                                        Cancel
+                                        {t('admin.cancel')}
                                     </button>
                                     <button
                                         type="submit"
                                         className="flex-1 bg-primary-600 hover:bg-primary-700 py-2 rounded-lg font-bold transition-colors"
                                     >
-                                        Create
+                                        {t('admin.addUser')}
                                     </button>
                                 </div>
                             </form>
@@ -241,18 +247,18 @@ const Admin = () => {
                 {showPasswordModal && selectedUser && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
                         <div className="bg-surface border border-white/10 rounded-2xl p-8 max-w-md w-full">
-                            <h2 className="text-2xl font-bold mb-2">Change Password</h2>
+                            <h2 className="text-2xl font-bold mb-2">{t('admin.changePassword')}</h2>
                             <p className="text-white/60 text-sm mb-6">Updating password for <b>{selectedUser.email}</b></p>
                             
                             <form onSubmit={handleUpdatePassword} className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-white/60 mb-1">New Password</label>
+                                    <label className="block text-sm font-medium text-white/60 mb-1">{t('admin.newPassword')}</label>
                                     <input
                                         type="password" required
                                         value={newPassword}
                                         onChange={e => setNewPassword(e.target.value)}
                                         className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-2 focus:border-primary-500 outline-none transition-colors"
-                                        placeholder="Enter new password"
+                                        placeholder={t('admin.newPassword')}
                                     />
                                 </div>
                                 <div className="flex gap-4 pt-4">
@@ -261,13 +267,13 @@ const Admin = () => {
                                         onClick={() => setShowPasswordModal(false)}
                                         className="flex-1 py-2 rounded-lg font-medium hover:bg-white/10 transition-colors"
                                     >
-                                        Cancel
+                                        {t('admin.cancel')}
                                     </button>
                                     <button
                                         type="submit"
                                         className="flex-1 bg-primary-600 hover:bg-primary-700 py-2 rounded-lg font-bold transition-colors"
                                     >
-                                        Update Password
+                                        {t('admin.updatePassword')}
                                     </button>
                                 </div>
                             </form>

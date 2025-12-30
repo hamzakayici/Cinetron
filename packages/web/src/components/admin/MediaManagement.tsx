@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Trash2, Edit2, Plus, Film, Image as ImageIcon, Subtitles as SubtitlesIcon, X, DownloadCloud } from 'lucide-react';
+import { Upload, Trash2, Edit2, Plus, Film, Image as ImageIcon, Subtitles as SubtitlesIcon, X, DownloadCloud, Link as LinkIcon } from 'lucide-react';
 import { useUploadQueue } from '../../context/UploadQueueContext';
 import { getMedia, updateMedia, deleteMedia, getSubtitles, uploadSubtitle, deleteSubtitle, searchMetadata } from '../../services/api';
 
@@ -33,6 +34,9 @@ const MediaManagement = () => {
     const [showSubtitleModal, setShowSubtitleModal] = useState(false);
     const [showImportModal, setShowImportModal] = useState(false);
     
+    // Upload Method State
+    const [uploadMethod, setUploadMethod] = useState<'file' | 'link'>('file');
+
     const [selectedMedia, setSelectedMedia] = useState<Media | null>(null);
     
     // Import Modal State
@@ -52,7 +56,8 @@ const MediaManagement = () => {
         type: 'movie' as 'movie' | 'series' | 'tv',
         posterUrl: '',
         backdropUrl: '',
-        tmdbId: ''
+        tmdbId: '',
+        videoUrl: ''
     });
 
     const [files, setFiles] = useState<{
@@ -124,22 +129,34 @@ const MediaManagement = () => {
             type: item.title ? 'movie' : 'tv', 
             posterUrl: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '',
             backdropUrl: item.backdrop_path ? `https://image.tmdb.org/t/p/original${item.backdrop_path}` : '',
-            tmdbId: item.id
+            tmdbId: item.id,
+            videoUrl: ''
         });
         setShowImportModal(false);
         setShowUploadModal(true);
     };
 
+// Helper hook to access translation outside of component context if needed, but here we use hook
+// Note: We need to use t inside render.
+
+    const { t } = useTranslation();
+
+    // ... (rest of imports and interfaces)
+
     const handleUpload = async (e: React.FormEvent) => {
         e.preventDefault();
         
         // Validation
-        if (!files.video) {
-            alert("Video file is required");
+        if (uploadMethod === 'file' && !files.video) {
+            alert(t('admin.videoFile') + " " + t('required'));
+            return;
+        }
+        if (uploadMethod === 'link' && !formData.videoUrl) {
+            alert("Video Link " + t('required'));
             return;
         }
         if (!formData.title) {
-            alert("Title is required");
+            alert(t('admin.title') + " " + t('required'));
             return;
         }
 
@@ -148,7 +165,7 @@ const MediaManagement = () => {
         
         addToQueue(
             {
-                video: files.video,
+                video: uploadMethod === 'file' ? files.video! : undefined,
                 poster: files.poster || undefined,
                 backdrop: files.backdrop || undefined
             },
@@ -178,12 +195,18 @@ const MediaManagement = () => {
             if (formData.posterUrl) formDataToSend.append('posterUrl', formData.posterUrl);
             if (formData.backdropUrl) formDataToSend.append('backdropUrl', formData.backdropUrl);
 
+            // Handle Video Update (File or Link)
+            // Existing logic only handled file. Let's assume edit also supports link now? 
+            // The prompt "media olarak link ile de mediayı ekleyebilmek istiyorum" implies addition, but users likely want to edit it too.
+            // Let's add videoUrl to update as well.
+            if (formData.videoUrl) formDataToSend.append('videoUrl', formData.videoUrl);
+
             if (files.video) formDataToSend.append('videoFile', files.video);
             if (files.poster) formDataToSend.append('posterFile', files.poster);
             if (files.backdrop) formDataToSend.append('backdropFile', files.backdrop);
 
             await updateMedia(selectedMedia.id, formDataToSend);
-            alert('Media updated successfully!');
+            alert(t('admin.update') + ' successful!');
             setShowEditModal(false);
             resetForm();
             fetchMedia();
@@ -196,7 +219,7 @@ const MediaManagement = () => {
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Are you sure you want to delete this media?')) return;
+        if (!confirm(t('admin.deleteConfirm'))) return;
 
         try {
             await deleteMedia(id);
@@ -209,11 +232,12 @@ const MediaManagement = () => {
     };
 
     const resetForm = () => {
-        setFormData({ title: '', originalTitle: '', overview: '', releaseDate: '', type: 'movie', posterUrl: '', backdropUrl: '', tmdbId: '' });
+        setFormData({ title: '', originalTitle: '', overview: '', releaseDate: '', type: 'movie', posterUrl: '', backdropUrl: '', tmdbId: '', videoUrl: '' });
         setFiles({ video: null, poster: null, backdrop: null });
         setSelectedMedia(null);
         setImportQuery('');
         setSearchResults([]);
+        setUploadMethod('file');
     };
 
     const openEditModal = (media: Media) => {
@@ -221,12 +245,14 @@ const MediaManagement = () => {
         setFormData({
             title: media.title,
             originalTitle: '',
-            type: media.type,
+            type: media.type as 'movie' | 'series' | 'tv',
             releaseDate: media.year?.toString() || '',
             overview: media.overview || '',
             posterUrl: media.posterUrl || '',
             backdropUrl: media.backdropUrl || '',
-            tmdbId: ''
+            tmdbId: '',
+            // If filePath starts with http, it's a link. Otherwise it's a file path but we can still populate videoUrl
+            videoUrl: media.filePath?.startsWith('http') ? media.filePath : '' 
         });
         setShowEditModal(true);
     };
@@ -268,7 +294,7 @@ const MediaManagement = () => {
     };
 
     const handleSubtitleDelete = async (subtitleId: string) => {
-        if (!selectedMedia || !confirm('Delete this subtitle?')) return;
+        if (!selectedMedia || !confirm(t('admin.subtitleDeleteConfirm'))) return;
 
         try {
             await deleteSubtitle(selectedMedia.id, subtitleId);
@@ -284,31 +310,31 @@ const MediaManagement = () => {
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold">Media Management</h2>
+                <h2 className="text-2xl font-bold">{t('admin.mediaManagement')}</h2>
                 <div className="flex gap-2">
                     <button
                         onClick={() => setShowImportModal(true)}
                         className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                     >
                         <DownloadCloud size={20} />
-                        Import from TMDB
+                        {t('admin.importTmdb')}
                     </button>
                     <button
                         onClick={() => setShowUploadModal(true)}
                         className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                     >
                         <Plus size={20} />
-                        Upload Media
+                        {t('admin.uploadMedia')}
                     </button>
                 </div>
             </div>
 
             {/* Media Grid */}
             {loading ? (
-                <div className="text-center py-12 text-white/60">Loading...</div>
+                <div className="text-center py-12 text-white/60">{t('detail.loading')}</div>
             ) : mediaList.length === 0 ? (
                 <div className="text-center py-12 text-white/40">
-                    No media uploaded yet. Click "Upload Media" to get started.
+                    {t('admin.noMedia')}
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -319,8 +345,8 @@ const MediaManagement = () => {
                             animate={{ opacity: 1, y: 0 }}
                             className="bg-surface rounded-xl overflow-hidden border border-white/5 hover:border-white/20 transition-colors group"
                         >
-                            {/* Poster */}
-                            <div className="aspect-[2/3] bg-black/50 relative overflow-hidden">
+                            {/* ... Poster logic same ... */}
+                             <div className="aspect-[2/3] bg-black/50 relative overflow-hidden">
                                 {media.posterUrl ? (
                                     <img src={media.posterUrl} alt={media.title} className="w-full h-full object-cover" />
                                 ) : (
@@ -333,21 +359,21 @@ const MediaManagement = () => {
                                     <button
                                         onClick={() => openEditModal(media)}
                                         className="p-2 bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors"
-                                        title="Edit"
+                                        title={t('admin.editMedia')}
                                     >
                                         <Edit2 size={18} />
                                     </button>
                                     <button
                                         onClick={() => openSubtitleModal(media)}
                                         className="p-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
-                                        title="Manage Subtitles"
+                                        title={t('admin.uploadSubtitle')}
                                     >
                                         <SubtitlesIcon size={18} />
                                     </button>
                                     <button
                                         onClick={() => handleDelete(media.id)}
                                         className="p-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
-                                        title="Delete"
+                                        title={t('admin.actions')}
                                     >
                                         <Trash2 size={18} />
                                     </button>
@@ -359,7 +385,7 @@ const MediaManagement = () => {
                                 <h3 className="font-bold text-lg mb-1 truncate">{media.title}</h3>
                                 <div className="flex items-center gap-2 text-sm text-white/60">
                                     <span className="px-2 py-0.5 bg-primary-500/20 text-primary-400 rounded text-xs font-bold uppercase">
-                                        {media.type}
+                                        {t(`media.type.${media.type}`)}
                                     </span>
                                     {media.year && <span>{media.year}</span>}
                                 </div>
@@ -372,14 +398,14 @@ const MediaManagement = () => {
             {/* Import Modal */}
             <AnimatePresence>
                 {showImportModal && (
-                    <Modal onClose={() => setShowImportModal(false)} title="Import from TMDB">
+                    <Modal onClose={() => setShowImportModal(false)} title={t('admin.importTmdb')}>
                         <div className="space-y-4">
                             <form onSubmit={handleSearchTMDB} className="flex gap-2">
                                 <input
                                     type="text"
                                     value={importQuery}
                                     onChange={e => setImportQuery(e.target.value)}
-                                    placeholder="Search movies..."
+                                    placeholder={t('admin.searchPlaceholder')}
                                     className="flex-1 bg-black/50 border border-white/10 rounded-lg px-4 py-2 focus:border-primary-500 outline-none"
                                 />
                                 <button
@@ -387,7 +413,7 @@ const MediaManagement = () => {
                                     disabled={isSearching}
                                     className="px-4 py-2 bg-primary-600 hover:bg-primary-700 rounded-lg font-bold"
                                 >
-                                    {isSearching ? 'Searching...' : 'Search'}
+                                    {isSearching ? t('admin.searching') : t('admin.search')}
                                 </button>
                             </form>
 
@@ -409,7 +435,7 @@ const MediaManagement = () => {
                                     </div>
                                 ))}
                                 {searchResults.length === 0 && !isSearching && importQuery && (
-                                    <div className="text-center text-white/40 py-8">No results found</div>
+                                    <div className="text-center text-white/40 py-8">{t('admin.noResults')}</div>
                                 )}
                             </div>
                         </div>
@@ -420,7 +446,7 @@ const MediaManagement = () => {
             {/* Upload Modal */}
             <AnimatePresence>
                 {showUploadModal && (
-                    <Modal onClose={() => { setShowUploadModal(false); resetForm(); }} title="Upload New Media">
+                    <Modal onClose={() => { setShowUploadModal(false); resetForm(); }} title={t('admin.uploadNew')}>
                         <form onSubmit={handleUpload} className="space-y-4">
                             {/* Preview Selected TMDB Info */}
                             {formData.posterUrl && (
@@ -429,14 +455,14 @@ const MediaManagement = () => {
                                         <img src={formData.posterUrl} alt="Preview" className="w-full h-full object-cover rounded" />
                                      </div>
                                      <div>
-                                         <p className="font-medium text-primary-200">Metadata imported from TMDB</p>
-                                         <p className="text-sm text-white/40">Poster and backdrop will be used unless you upload custom files.</p>
+                                         <p className="font-medium text-primary-200">{t('admin.metadataImported')}</p>
+                                         <p className="text-sm text-white/40">{t('admin.metadataNotice')}</p>
                                      </div>
                                 </div>
                             )}
 
                             <div>
-                                <label className="block text-sm font-medium text-white/60 mb-1">Title *</label>
+                                <label className="block text-sm font-medium text-white/60 mb-1">{t('admin.title')}</label>
                                 <input
                                     type="text" required
                                     value={formData.title}
@@ -447,19 +473,19 @@ const MediaManagement = () => {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-white/60 mb-1">Type *</label>
+                                    <label className="block text-sm font-medium text-white/60 mb-1">{t('admin.type')}</label>
                                     <select
                                         value={formData.type}
                                         onChange={e => setFormData({ ...formData, type: e.target.value as any })}
                                         className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-2 focus:border-primary-500 outline-none text-white"
                                     >
-                                        <option value="movie">Movie</option>
-                                        <option value="series">Series</option>
-                                        <option value="tv">TV</option>
+                                        <option value="movie">{t('media.type.movie')}</option>
+                                        <option value="series">{t('media.type.series')}</option>
+                                        <option value="tv">{t('media.type.tv')}</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-white/60 mb-1">Year</label>
+                                    <label className="block text-sm font-medium text-white/60 mb-1">{t('admin.year')}</label>
                                     <input
                                         type="number"
                                         value={formData.releaseDate}
@@ -470,7 +496,7 @@ const MediaManagement = () => {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-white/60 mb-1">Overview</label>
+                                <label className="block text-sm font-medium text-white/60 mb-1">{t('admin.overview')}</label>
                                 <textarea
                                     rows={3}
                                     value={formData.overview}
@@ -479,9 +505,44 @@ const MediaManagement = () => {
                                 />
                             </div>
 
-                            <FileInput label="Video File" icon={Film} accept="video/*" onChange={e => handleFileChange(e, 'video')} file={files.video} />
-                            <FileInput label="Poster Image" icon={ImageIcon} accept="image/*" onChange={e => handleFileChange(e, 'poster')} file={files.poster} />
-                            <FileInput label="Backdrop Image" icon={ImageIcon} accept="image/*" onChange={e => handleFileChange(e, 'backdrop')} file={files.backdrop} />
+                            {/* Upload Method Toggle */}
+                            <div className="bg-white/5 p-1 rounded-lg flex mb-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setUploadMethod('file')}
+                                    className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${uploadMethod === 'file' ? 'bg-primary-600 text-white shadow-lg' : 'text-white/60 hover:text-white'}`}
+                                >
+                                    Dosya Yükle
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setUploadMethod('link')}
+                                    className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${uploadMethod === 'link' ? 'bg-primary-600 text-white shadow-lg' : 'text-white/60 hover:text-white'}`}
+                                >
+                                    Link Ekle
+                                </button>
+                            </div>
+
+                            {uploadMethod === 'file' ? (
+                                <FileInput label={t('admin.videoFile')} icon={Film} accept="video/*" onChange={e => handleFileChange(e, 'video')} file={files.video} />
+                            ) : (
+                                <div>
+                                    <label className="block text-sm font-medium text-white/60 mb-1">Video Linki</label>
+                                    <div className="flex items-center gap-2 bg-black/50 border border-white/10 rounded-lg px-4 py-2 focus-within:border-primary-500">
+                                        <LinkIcon size={18} className="text-white/40" />
+                                        <input
+                                            type="url"
+                                            value={formData.videoUrl}
+                                            onChange={e => setFormData({...formData, videoUrl: e.target.value})}
+                                            className="flex-1 bg-transparent outline-none text-white placeholder-white/20"
+                                            placeholder="https://..."
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            <FileInput label={t('admin.posterImage')} icon={ImageIcon} accept="image/*" onChange={e => handleFileChange(e, 'poster')} file={files.poster} />
+                            <FileInput label={t('admin.backdropImage')} icon={ImageIcon} accept="image/*" onChange={e => handleFileChange(e, 'backdrop')} file={files.backdrop} />
 
                             <div className="flex gap-4 pt-4">
                                 <button
@@ -489,14 +550,14 @@ const MediaManagement = () => {
                                     onClick={() => setShowUploadModal(false)}
                                     className="flex-1 py-3 rounded-lg font-medium hover:bg-white/10 transition-colors"
                                 >
-                                    Cancel
+                                    {t('admin.cancel')}
                                 </button>
                                 <button
                                     type="submit"
                                     className="flex-1 bg-primary-600 hover:bg-primary-700 py-3 rounded-lg font-bold transition-colors flex items-center justify-center gap-2"
                                 >
                                     <Upload size={20} />
-                                    Add to Queue
+                                    {t('admin.addToQueue')}
                                 </button>
                             </div>
                         </form>
@@ -507,10 +568,10 @@ const MediaManagement = () => {
             {/* Edit Modal */}
             <AnimatePresence>
                 {showEditModal && (
-                    <Modal onClose={() => { setShowEditModal(false); resetForm(); }} title="Edit Media">
+                    <Modal onClose={() => { setShowEditModal(false); resetForm(); }} title={t('admin.editMedia')}>
                         <form onSubmit={handleEdit} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-white/60 mb-1">Title *</label>
+                                <label className="block text-sm font-medium text-white/60 mb-1">{t('admin.title')}</label>
                                 <input
                                     type="text" required
                                     value={formData.title}
@@ -521,19 +582,19 @@ const MediaManagement = () => {
                             
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-white/60 mb-1">Type *</label>
+                                    <label className="block text-sm font-medium text-white/60 mb-1">{t('admin.type')}</label>
                                     <select
                                         value={formData.type}
                                         onChange={e => setFormData({ ...formData, type: e.target.value as any })}
                                         className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-2 focus:border-primary-500 outline-none text-white"
                                     >
-                                        <option value="movie">Movie</option>
-                                        <option value="series">Series</option>
-                                        <option value="tv">TV</option>
+                                        <option value="movie">{t('media.type.movie')}</option>
+                                        <option value="series">{t('media.type.series')}</option>
+                                        <option value="tv">{t('media.type.tv')}</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-white/60 mb-1">Year</label>
+                                    <label className="block text-sm font-medium text-white/60 mb-1">{t('admin.year')}</label>
                                     <input
                                         type="number"
                                         value={formData.releaseDate}
@@ -544,7 +605,7 @@ const MediaManagement = () => {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-white/60 mb-1">Overview</label>
+                                <label className="block text-sm font-medium text-white/60 mb-1">{t('admin.overview')}</label>
                                 <textarea
                                     rows={3}
                                     value={formData.overview}
@@ -553,10 +614,10 @@ const MediaManagement = () => {
                                 />
                             </div>
 
-                            <p className="text-sm text-white/40">Leave file inputs empty to keep existing files</p>
-                            <FileInput label="Video File" icon={Film} accept="video/*" onChange={e => handleFileChange(e, 'video')} file={files.video} />
-                            <FileInput label="Poster Image" icon={ImageIcon} accept="image/*" onChange={e => handleFileChange(e, 'poster')} file={files.poster} />
-                            <FileInput label="Backdrop Image" icon={ImageIcon} accept="image/*" onChange={e => handleFileChange(e, 'backdrop')} file={files.backdrop} />
+                            <p className="text-sm text-white/40">{t('admin.leaveEmpty')}</p>
+                            <FileInput label={t('admin.videoFile')} icon={Film} accept="video/*" onChange={e => handleFileChange(e, 'video')} file={files.video} />
+                            <FileInput label={t('admin.posterImage')} icon={ImageIcon} accept="image/*" onChange={e => handleFileChange(e, 'poster')} file={files.poster} />
+                            <FileInput label={t('admin.backdropImage')} icon={ImageIcon} accept="image/*" onChange={e => handleFileChange(e, 'backdrop')} file={files.backdrop} />
 
                             <div className="flex gap-4 pt-4">
                                 <button
@@ -564,14 +625,14 @@ const MediaManagement = () => {
                                     onClick={() => { setShowEditModal(false); resetForm(); }}
                                     className="flex-1 py-2 rounded-lg font-medium hover:bg-white/10 transition-colors"
                                 >
-                                    Cancel
+                                    {t('admin.cancel')}
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={isSubmitting}
                                     className="flex-1 bg-primary-600 hover:bg-primary-700 disabled:opacity-50 py-2 rounded-lg font-bold transition-colors"
                                 >
-                                    {isSubmitting ? 'Updating...' : 'Update'}
+                                    {isSubmitting ? t('admin.updating') : t('admin.update')}
                                 </button>
                             </div>
                         </form>
@@ -582,14 +643,14 @@ const MediaManagement = () => {
             {/* Subtitle Modal */}
             <AnimatePresence>
                 {showSubtitleModal && selectedMedia && (
-                    <Modal onClose={() => setShowSubtitleModal(false)} title={`Subtitles - ${selectedMedia.title}`}>
+                    <Modal onClose={() => setShowSubtitleModal(false)} title={`${t('admin.uploadSubtitle')} - ${selectedMedia.title}`}>
                         <div className="space-y-4">
                              {/* Upload Subtitle */}
                             <form onSubmit={handleSubtitleUpload} className="space-y-3 pb-4 border-b border-white/10">
-                                <h3 className="font-semibold">Upload New Subtitle</h3>
+                                <h3 className="font-semibold">{t('admin.uploadNewSubtitle')}</h3>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label className="block text-sm font-medium text-white/60 mb-1">Language</label>
+                                        <label className="block text-sm font-medium text-white/60 mb-1">{t('admin.language')}</label>
                                         <select
                                             value={subtitleLang}
                                             onChange={e => setSubtitleLang(e.target.value)}
@@ -603,7 +664,7 @@ const MediaManagement = () => {
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-white/60 mb-1">Label</label>
+                                        <label className="block text-sm font-medium text-white/60 mb-1">{t('admin.label')}</label>
                                         <input
                                             type="text"
                                             value={subtitleLabel}
@@ -625,15 +686,15 @@ const MediaManagement = () => {
                                     disabled={!subtitleFile}
                                     className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed py-2 rounded-lg font-medium transition-colors"
                                 >
-                                    Upload Subtitle
+                                    {t('admin.uploadSubtitle')}
                                 </button>
                             </form>
 
                             {/* Subtitle List */}
                             <div>
-                                <h3 className="font-semibold mb-3">Existing Subtitles</h3>
+                                <h3 className="font-semibold mb-3">{t('admin.existingSubtitles')}</h3>
                                 {subtitles.length === 0 ? (
-                                    <p className="text-white/40 text-sm text-center py-4">No subtitles uploaded yet</p>
+                                    <p className="text-white/40 text-sm text-center py-4">{t('admin.noSubtitles')}</p>
                                 ) : (
                                     <div className="space-y-2">
                                         {subtitles.map(sub => (

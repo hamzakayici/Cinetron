@@ -68,4 +68,23 @@ export class TmdbService {
             return null;
         }
     }
+    async findByExternalId(externalId: string) {
+        try {
+            const response = await axios.get(`${this.baseUrl}/find/${externalId}`, {
+                headers: this.headers,
+                params: { 
+                    language: 'tr-TR',
+                    external_source: 'imdb_id'
+                },
+            });
+            // Combine results from movie_results and tv_results
+            return [
+                ...(response.data.movie_results || []),
+                ...(response.data.tv_results || [])
+            ];
+        } catch (error) {
+            this.logger.error(`Error finding by external ID: ${externalId}`, error);
+            return [];
+        }
+    }
 }

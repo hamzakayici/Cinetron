@@ -17,6 +17,7 @@ export interface UploadItem {
         parentId?: string;
         seasonNumber?: number;
         episodeNumber?: number;
+        videoUrl?: string;
         [key: string]: any;
     };
     progress: number;
@@ -49,9 +50,9 @@ export const UploadQueueProvider: React.FC<{ children: React.ReactNode }> = ({ c
         updateItemStatus(item.id, 'uploading', 0);
 
         const formData = new FormData();
-        if (item.files.video) formData.append('video', item.files.video);
-        if (item.files.poster) formData.append('poster', item.files.poster);
-        if (item.files.backdrop) formData.append('backdrop', item.files.backdrop);
+        if (item.files.video) formData.append('videoFile', item.files.video);
+        if (item.files.poster) formData.append('posterFile', item.files.poster);
+        if (item.files.backdrop) formData.append('backdropFile', item.files.backdrop);
         
         // Append metadata
         Object.entries(item.metadata).forEach(([key, value]) => {
@@ -61,7 +62,7 @@ export const UploadQueueProvider: React.FC<{ children: React.ReactNode }> = ({ c
         });
 
         try {
-            await api.post('/media/upload', formData, {
+            await api.post('/media', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },

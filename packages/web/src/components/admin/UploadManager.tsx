@@ -89,9 +89,9 @@ const UploadManager = () => {
                                         
                                         {/* Progress Bar */}
                                         {(item.status === 'uploading' || item.status === 'pending') && (
-                                            <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+                                            <div className="h-2 bg-white/10 rounded-full overflow-hidden mt-2">
                                                 <motion.div 
-                                                    className="h-full bg-primary-500"
+                                                    className="h-full bg-blue-500"
                                                     initial={{ width: 0 }}
                                                     animate={{ width: `${item.progress}%` }}
                                                     transition={{ duration: 0.2 }}

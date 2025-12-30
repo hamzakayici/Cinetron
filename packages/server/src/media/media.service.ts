@@ -219,6 +219,19 @@ export class MediaService implements OnModuleInit {
         return count > 0;
     }
 
+    async searchTMDB(query: string, type: 'movie' | 'tv', year?: number) {
+        // Check if query looks like an IMDB ID (e.g. tt1234567)
+        if (query.startsWith('tt')) {
+            return this.tmdbService.findByExternalId(query);
+        }
+
+        if (type === 'movie') {
+            return this.tmdbService.searchMovie(query, year);
+        } else {
+            return this.tmdbService.searchTvShow(query, year);
+        }
+    }
+
     // Admin CRUD Methods
     async createMedia(dto: any, files: any): Promise<Media> {
         const media = this.mediaRepository.create({
@@ -231,12 +244,22 @@ export class MediaService implements OnModuleInit {
         // Handle file uploads
         if (files.videoFile && files.videoFile[0]) {
             media.filePath = `/files/uploads/videos/${files.videoFile[0].filename}`;
+        } else if (dto.videoUrl) {
+            media.filePath = dto.videoUrl;
         }
+
+        // Poster
         if (files.posterFile && files.posterFile[0]) {
             media.posterUrl = `/files/uploads/images/${files.posterFile[0].filename}`;
+        } else if (dto.posterUrl) {
+            media.posterUrl = dto.posterUrl;
         }
+
+        // Backdrop
         if (files.backdropFile && files.backdropFile[0]) {
             media.backdropUrl = `/files/uploads/images/${files.backdropFile[0].filename}`;
+        } else if (dto.backdropUrl) {
+            media.backdropUrl = dto.backdropUrl;
         }
 
         return this.mediaRepository.save(media);
@@ -257,12 +280,22 @@ export class MediaService implements OnModuleInit {
         // Handle file uploads (only if new files provided)
         if (files.videoFile && files.videoFile[0]) {
             media.filePath = `/files/uploads/videos/${files.videoFile[0].filename}`;
+        } else if (dto.videoUrl) {
+            media.filePath = dto.videoUrl;
         }
+
+        // Poster
         if (files.posterFile && files.posterFile[0]) {
             media.posterUrl = `/files/uploads/images/${files.posterFile[0].filename}`;
+        } else if (dto.posterUrl) {
+            media.posterUrl = dto.posterUrl;
         }
+
+        // Backdrop
         if (files.backdropFile && files.backdropFile[0]) {
             media.backdropUrl = `/files/uploads/images/${files.backdropFile[0].filename}`;
+        } else if (dto.backdropUrl) {
+            media.backdropUrl = dto.backdropUrl;
         }
 
         return this.mediaRepository.save(media);
