@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Delete, Body, Param, UseGuards, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Param, UseGuards, UnauthorizedException, Patch } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { User, UserRole } from './user.entity';
 import { AuthGuard } from '@nestjs/passport';
@@ -40,5 +40,21 @@ export class UsersController {
         const created = await this.usersService.create(newUser);
         const { passwordHash, ...result } = created;
         return result;
+    }
+
+    @Patch(':id/password')
+    @Roles(UserRole.ADMIN)
+    @ApiOperation({ summary: 'Update user password (Admin only)' })
+    async updatePassword(@Param('id') id: string, @Body('password') password: string) {
+        await this.usersService.updatePassword(id, password);
+        return { message: 'Password updated successfully' };
+    }
+
+    @Delete(':id')
+    @Roles(UserRole.ADMIN)
+    @ApiOperation({ summary: 'Delete user (Admin only)' })
+    async delete(@Param('id') id: string) {
+        await this.usersService.delete(id);
+        return { message: 'User deleted successfully' };
     }
 }

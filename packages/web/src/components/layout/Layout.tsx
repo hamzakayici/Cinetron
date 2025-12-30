@@ -15,8 +15,22 @@ const Layout = () => {
         { icon: Tv, label: t('sidebar.series') || 'Series', path: '/series' },
         { icon: List, label: t('sidebar.mylist') || 'My List', path: '/list' },
         { icon: History, label: t('sidebar.history') || 'History', path: '/history' },
-        { icon: Settings, label: t('sidebar.settings'), path: '/admin' },
+        { icon: Settings, label: t('sidebar.settings'), path: '/admin', roles: ['admin'] },
     ];
+
+    // Get user role from token
+    let userRole = 'viewer';
+    try {
+        const token = localStorage.getItem('token');
+        if (token) {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            userRole = payload.role || 'viewer';
+        }
+    } catch (e) {
+        console.error("Failed to parse token", e);
+    }
+
+    const filteredNavItems = navItems.filter(item => !item.roles || item.roles.includes(userRole));
 
     return (
         <div className="flex h-screen bg-background text-white selection:bg-primary-500/30">
@@ -39,7 +53,7 @@ const Layout = () => {
 
                 {/* Navigation Items */}
                 <nav className="flex-1 px-3 space-y-1 mt-6">
-                    {navItems.map((item) => {
+                    {filteredNavItems.map((item) => {
                         const isActive = location.pathname === item.path;
                         return (
                             <Link

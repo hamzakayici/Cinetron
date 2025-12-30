@@ -36,6 +36,12 @@ api.interceptors.response.use((response) => {
     return Promise.reject(error);
 });
 
+// User Management
+export const getUsers = () => api.get('/users');
+export const createUser = (data: any) => api.post('/users', data);
+export const deleteUser = (id: string) => api.delete(`/users/${id}`);
+export const updateUserPassword = (id: string, password: string) => api.patch(`/users/${id}/password`, { password });
+
 // Define API methods
 export const getMedia = () => api.get<any[]>('/media');
 export const getMediaDetail = (id: string) => api.get<any>(`/media/${id}`);
@@ -77,6 +83,10 @@ export const deleteSubtitle = (mediaId: string, subtitleId: string) => {
 
 // System
 export const getSystemStats = () => api.get('/system/stats');
+
+export const searchMetadata = (query: string, type: 'movie' | 'tv', year?: number) => {
+    return api.get('/media/metadata/search', { params: { q: query, type, year } });
+};
 
 export default api;
 

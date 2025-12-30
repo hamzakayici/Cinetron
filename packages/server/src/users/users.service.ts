@@ -36,7 +36,13 @@ export class UsersService {
         return this.usersRepository.find();
     }
 
-    async updatePassword(id: string, passwordHash: string): Promise<void> {
+    async updatePassword(id: string, password: string): Promise<void> {
+        const salt = await bcrypt.genSalt();
+        const passwordHash = await bcrypt.hash(password, salt);
         await this.usersRepository.update(id, { passwordHash });
+    }
+
+    async delete(id: string): Promise<void> {
+        await this.usersRepository.delete(id);
     }
 }
