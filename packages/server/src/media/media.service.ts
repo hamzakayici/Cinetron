@@ -104,14 +104,38 @@ export class MediaService implements OnModuleInit {
     }
 
     async seedMockData() {
-        const count = await this.mediaRepository.count();
-        if (count > 0) {
-            this.logger.log(`Database already has ${count} media items. Skipping seed.`);
-            return;
-        }
-
         this.logger.log('Seeding mock data...');
         const mockMediaData = [
+            {
+                title: 'Test Link MP4 (Big Buck Bunny)',
+                type: 'movie',
+                year: 2008,
+                overview: 'Test video streamed directly from URL (MP4).',
+                posterUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Big_buck_bunny_poster_big.jpg/800px-Big_buck_bunny_poster_big.jpg',
+                backdropUrl: 'https://peach.blender.org/wp-content/uploads/title_anouncement.jpg?x11217',
+                filePath: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+                genres: ['Animation', 'Test'],
+            },
+            {
+                title: 'Test Link MKV (Proxy)',
+                type: 'movie',
+                year: 2024,
+                overview: 'Test video streamed via backend proxy (MKV -> MP4).',
+                posterUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ForBiggerBlazes.jpg',
+                backdropUrl: '',
+                filePath: 'http://127.0.0.1:3000/files/uploads/videos/test_local.mkv',
+                genres: ['Test', 'Proxy'],
+            },
+            {
+                title: 'Test Local Video',
+                type: 'movie',
+                year: 2024,
+                overview: 'Test video served from local filesystem.',
+                posterUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ForBiggerBlazes.jpg',
+                backdropUrl: '',
+                filePath: '/files/uploads/videos/test_local.mp4',
+                genres: ['Test', 'Local'],
+            },
             {
                 title: 'The Shawshank Redemption',
                 type: 'movie',
@@ -121,33 +145,17 @@ export class MediaService implements OnModuleInit {
                 backdropUrl: 'https://image.tmdb.org/t/p/original/kXfqcdQKsToO0OUXHcrrNCHDBzO.jpg',
                 filePath: '/files/uploads/videos/shawshank.mp4',
                 genres: ['Drama', 'Crime'],
-            },
-            {
-                title: 'The Godfather',
-                type: 'movie',
-                year: 1972,
-                overview: 'The aging patriarch of an organized crime dynasty transfers control to his reluctant son.',
-                posterUrl: 'https://image.tmdb.org/t/p/w500/3bhkrj58Vtu7enYsRolD1fZdja1.jpg',
-                backdropUrl: 'https://image.tmdb.org/t/p/original/tmU7GeKVybMWFButWEGl2M4GeiP.jpg',
-                filePath: '/files/uploads/videos/godfather.mp4',
-                genres: ['Drama', 'Crime'],
-            },
-            {
-                title: 'Interstellar',
-                type: 'movie',
-                year: 2014,
-                overview: 'A team of explorers travel through a wormhole in space in an attempt to ensure humanity\'s survival.',
-                posterUrl: 'https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg',
-                backdropUrl: 'https://image.tmdb.org/t/p/original/pbrkL804c8yAv3zBZR4QPEafpAR.jpg',
-                filePath: '/files/uploads/videos/interstellar.mp4',
-                genres: ['Adventure', 'Drama', 'Science Fiction'],
-            },
+            }
         ];
 
         for (const data of mockMediaData) {
-            await this.mediaRepository.save(data);
+            const exists = await this.mediaRepository.findOne({ where: { title: data.title } });
+            if (!exists) {
+                await this.mediaRepository.save(data);
+                this.logger.log(`Seeded: ${data.title}`);
+            }
         }
-        this.logger.log(`Seeded ${mockMediaData.length} mock media items`);
+        this.logger.log('Seeding verification complete.');
     }
 
     async enhanceMediaMetadata(media: Media): Promise<Media> {
