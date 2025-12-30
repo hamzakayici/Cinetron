@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Request, Delete, Put, UseInterceptors, UploadedFiles, UploadedFile, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, Request, Delete, Put, UseInterceptors, UploadedFiles, UploadedFile, Query, Res } from '@nestjs/common';
 import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
@@ -57,6 +57,12 @@ export class MediaController {
     @ApiOperation({ summary: 'Search TMDB for metadata' })
     async searchMetadata(@Query('q') query: string, @Query('type') type: 'movie' | 'tv', @Query('year') year?: number) {
         return this.mediaService.searchTMDB(query, type, year);
+    }
+
+    @Get('stream/external')
+    @ApiOperation({ summary: 'Proxy external stream for playback' })
+    async streamExternal(@Query('url') url: string, @Res() res) {
+        return this.mediaService.streamExternal(url, res);
     }
 
     @ApiBearerAuth()

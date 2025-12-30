@@ -47,7 +47,10 @@ export class TmdbService {
         try {
             const response = await axios.get(`${this.baseUrl}/movie/${id}`, {
                 headers: this.headers,
-                params: { language: 'tr-TR' },
+                params: { 
+                    language: 'tr-TR',
+                    append_to_response: 'credits,videos,images,similar'
+                },
             });
             return response.data;
         } catch (error) {
@@ -60,7 +63,10 @@ export class TmdbService {
         try {
             const response = await axios.get(`${this.baseUrl}/tv/${id}`, {
                 headers: this.headers,
-                params: { language: 'tr-TR' },
+                params: { 
+                    language: 'tr-TR',
+                    append_to_response: 'aggregate_credits,videos,images,similar'
+                },
             });
             return response.data;
         } catch (error) {

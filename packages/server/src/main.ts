@@ -16,6 +16,11 @@ async function bootstrap() {
     app.enableCors();
     app.setGlobalPrefix('api');
     app.useGlobalPipes(new ValidationPipe());
+    
+    // Increase payload size limit
+    const bodyParser = require('body-parser');
+    app.use(bodyParser.json({ limit: '500mb' }));
+    app.use(bodyParser.urlencoded({ limit: '500mb', extended: true }));
 
     const config = new DocumentBuilder()
         .setTitle('Cinetron API')

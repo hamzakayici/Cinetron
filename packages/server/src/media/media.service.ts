@@ -49,9 +49,47 @@ export class MediaService implements OnModuleInit {
         // For local files, use direct path
         const result: any = { ...media };
         if (media.filePath) {
-            result.playbackUrl = media.filePath;
+            // Check if it is an external MKV link
+            if (media.filePath.startsWith('http') && media.filePath.toLowerCase().includes('.mkv')) {
+                 // Return relative proxy URL
+                 result.playbackUrl = `/media/stream/external?url=${encodeURIComponent(media.filePath)}`;
+            } else {
+                 result.playbackUrl = media.filePath;
+            }
         }
         return result;
+    }
+
+    async streamExternal(url: string, res: any) {
+        if (!url) {
+            res.status(400).send('URL required');
+            return;
+        }
+
+        const { spawn } = require('child_process');
+        
+        res.header('Content-Type', 'video/mp4');
+
+        // FFmpeg command to remux to fragmented MP4
+        const ffmpeg = spawn('ffmpeg', [
+            '-i', url,
+            '-c:v', 'copy', // Try copy first for speed
+            '-c:a', 'aac',  // Ensure audio is AAC (browser compatible)
+            '-f', 'mp4',
+            '-movflags', 'frag_keyframe+empty_moov',
+            'pipe:1'
+        ]);
+
+        ffmpeg.stderr.on('data', (data) => {
+            // Optional: log stderr for debugging implementation
+            // this.logger.debug(`FFmpeg stderr: ${data}`);
+        });
+
+        ffmpeg.stdout.pipe(res);
+
+        res.on('close', () => {
+            ffmpeg.kill();
+        });
     }
 
     async getEpisode(id: string): Promise<Episode & { playbackUrl?: string }> {
