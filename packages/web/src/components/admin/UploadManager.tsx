@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useUploadQueue } from '../../context/UploadQueueContext';
-import { ChevronUp, ChevronDown, X, RefreshCw, CheckCircle, AlertCircle, Trash2, Minimize2, Maximize2 } from 'lucide-react';
+import { ChevronUp, ChevronDown, RefreshCw, CheckCircle, AlertCircle, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const UploadManager = () => {
@@ -91,7 +91,7 @@ const UploadManager = () => {
                                         {(item.status === 'uploading' || item.status === 'pending') && (
                                             <div className="h-1 bg-white/10 rounded-full overflow-hidden">
                                                 <motion.div 
-                                                    className={`h-full ${item.status === 'error' ? 'bg-red-500' : 'bg-primary-500'}`}
+                                                    className="h-full bg-primary-500"
                                                     initial={{ width: 0 }}
                                                     animate={{ width: `${item.progress}%` }}
                                                     transition={{ duration: 0.2 }}

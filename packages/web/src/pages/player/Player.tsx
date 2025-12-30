@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, Play, Pause, RotateCcw, Volume2, VolumeX, Maximize, Subtitles as SubtitlesIcon, Check, Settings, PictureInPicture, FastForward } from 'lucide-react';
+import { ArrowLeft, Loader2, Play, Pause, RotateCcw, Volume2, VolumeX, Maximize, Subtitles as SubtitlesIcon, Check, Settings, PictureInPicture } from 'lucide-react';
 import api from '../../services/api';
 import { type Media, saveProgress, getProgress } from '../../services/media';
 import { getSubtitles } from '../../services/api';

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Trash2, Edit2, Plus, Film, Image as ImageIcon, Search, Filter, Subtitles as SubtitlesIcon, X, FileText, Check } from 'lucide-react';
+import { Upload, Trash2, Edit2, Plus, Film, Image as ImageIcon, Subtitles as SubtitlesIcon, X, DownloadCloud } from 'lucide-react';
 import { useUploadQueue } from '../../context/UploadQueueContext';
-import { getMedia, updateMedia, deleteMedia, getSubtitles, uploadSubtitle, deleteSubtitle } from '../../services/api';
+import { getMedia, updateMedia, deleteMedia, getSubtitles, uploadSubtitle, deleteSubtitle, searchMetadata } from '../../services/api';
 
 interface Media {
     id: string;
@@ -31,8 +31,14 @@ const MediaManagement = () => {
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showSubtitleModal, setShowSubtitleModal] = useState(false);
+    const [showImportModal, setShowImportModal] = useState(false);
     
     const [selectedMedia, setSelectedMedia] = useState<Media | null>(null);
+    
+    // Import Modal State
+    const [importQuery, setImportQuery] = useState('');
+    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
     
     // Upload Queue
     const { addToQueue } = useUploadQueue();
@@ -44,6 +50,9 @@ const MediaManagement = () => {
         overview: '',
         releaseDate: '',
         type: 'movie' as 'movie' | 'series' | 'tv',
+        posterUrl: '',
+        backdropUrl: '',
+        tmdbId: ''
     });
 
     const [files, setFiles] = useState<{
@@ -88,6 +97,39 @@ const MediaManagement = () => {
         }
     };
 
+    const handleSearchTMDB = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!importQuery) return;
+        
+        setIsSearching(true);
+        try {
+            // Determine type based on some heuristic or let user choose, defaulting to movie for now
+            // Or retrieve both? Let's just search 'movie' and 'tv'
+            const res = await searchMetadata(importQuery, 'movie'); 
+            // Also search TV? For now simplified to movie search, or add a toggle
+            setSearchResults(res.data);
+        } catch (err) {
+            console.error("Search failed", err);
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
+    const handleImportSelect = (item: any) => {
+        setFormData({
+            title: item.title || item.name,
+            originalTitle: item.original_title || item.original_name,
+            overview: item.overview,
+            releaseDate: (item.release_date || item.first_air_date || '').split('-')[0],
+            type: item.title ? 'movie' : 'tv', 
+            posterUrl: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '',
+            backdropUrl: item.backdrop_path ? `https://image.tmdb.org/t/p/original${item.backdrop_path}` : '',
+            tmdbId: item.id
+        });
+        setShowImportModal(false);
+        setShowUploadModal(true);
+    };
+
     const handleUpload = async (e: React.FormEvent) => {
         e.preventDefault();
         
@@ -102,6 +144,8 @@ const MediaManagement = () => {
         }
 
         // Add to Queue
+        const queueType = formData.type === 'movie' ? 'movie' : 'show';
+        
         addToQueue(
             {
                 video: files.video,
@@ -110,7 +154,7 @@ const MediaManagement = () => {
             },
             {
                 ...formData,
-                type: formData.type as 'movie' | 'series' | 'tv'
+                type: queueType
             }
         );
 
@@ -130,6 +174,9 @@ const MediaManagement = () => {
             formDataToSend.append('type', formData.type);
             if (formData.releaseDate) formDataToSend.append('year', formData.releaseDate);
             if (formData.overview) formDataToSend.append('overview', formData.overview);
+            
+            if (formData.posterUrl) formDataToSend.append('posterUrl', formData.posterUrl);
+            if (formData.backdropUrl) formDataToSend.append('backdropUrl', formData.backdropUrl);
 
             if (files.video) formDataToSend.append('videoFile', files.video);
             if (files.poster) formDataToSend.append('posterFile', files.poster);
@@ -162,9 +209,11 @@ const MediaManagement = () => {
     };
 
     const resetForm = () => {
-        setFormData({ title: '', originalTitle: '', overview: '', releaseDate: '', type: 'movie' });
+        setFormData({ title: '', originalTitle: '', overview: '', releaseDate: '', type: 'movie', posterUrl: '', backdropUrl: '', tmdbId: '' });
         setFiles({ video: null, poster: null, backdrop: null });
         setSelectedMedia(null);
+        setImportQuery('');
+        setSearchResults([]);
     };
 
     const openEditModal = (media: Media) => {
@@ -174,7 +223,10 @@ const MediaManagement = () => {
             originalTitle: '',
             type: media.type,
             releaseDate: media.year?.toString() || '',
-            overview: media.overview || ''
+            overview: media.overview || '',
+            posterUrl: media.posterUrl || '',
+            backdropUrl: media.backdropUrl || '',
+            tmdbId: ''
         });
         setShowEditModal(true);
     };
@@ -234,7 +286,13 @@ const MediaManagement = () => {
             <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold">Media Management</h2>
                 <div className="flex gap-2">
-                     {/* Search/Filter UI Placeholder */}
+                    <button
+                        onClick={() => setShowImportModal(true)}
+                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                    >
+                        <DownloadCloud size={20} />
+                        Import from TMDB
+                    </button>
                     <button
                         onClick={() => setShowUploadModal(true)}
                         className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
@@ -311,11 +369,72 @@ const MediaManagement = () => {
                 </div>
             )}
 
+            {/* Import Modal */}
+            <AnimatePresence>
+                {showImportModal && (
+                    <Modal onClose={() => setShowImportModal(false)} title="Import from TMDB">
+                        <div className="space-y-4">
+                            <form onSubmit={handleSearchTMDB} className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={importQuery}
+                                    onChange={e => setImportQuery(e.target.value)}
+                                    placeholder="Search movies..."
+                                    className="flex-1 bg-black/50 border border-white/10 rounded-lg px-4 py-2 focus:border-primary-500 outline-none"
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={isSearching}
+                                    className="px-4 py-2 bg-primary-600 hover:bg-primary-700 rounded-lg font-bold"
+                                >
+                                    {isSearching ? 'Searching...' : 'Search'}
+                                </button>
+                            </form>
+
+                            <div className="max-h-[400px] overflow-y-auto space-y-2">
+                                {searchResults.map((item: any) => (
+                                    <div key={item.id} className="flex gap-4 p-3 bg-black/30 rounded-lg hover:bg-white/5 transition-colors cursor-pointer" onClick={() => handleImportSelect(item)}>
+                                        <div className="w-16 h-24 bg-black/50 flex-shrink-0">
+                                            {item.poster_path && (
+                                                <img src={`https://image.tmdb.org/t/p/w200${item.poster_path}`} alt={item.title} className="w-full h-full object-cover rounded" />
+                                            )}
+                                        </div>
+                                        <div className="flex-1">
+                                            <h4 className="font-bold">{item.title || item.name}</h4>
+                                            <div className="text-sm text-white/60 mb-1">
+                                                {(item.release_date || item.first_air_date || '').split('-')[0]}
+                                            </div>
+                                            <p className="text-sm text-white/40 line-clamp-2">{item.overview}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                                {searchResults.length === 0 && !isSearching && importQuery && (
+                                    <div className="text-center text-white/40 py-8">No results found</div>
+                                )}
+                            </div>
+                        </div>
+                    </Modal>
+                )}
+            </AnimatePresence>
+
             {/* Upload Modal */}
             <AnimatePresence>
                 {showUploadModal && (
                     <Modal onClose={() => { setShowUploadModal(false); resetForm(); }} title="Upload New Media">
                         <form onSubmit={handleUpload} className="space-y-4">
+                            {/* Preview Selected TMDB Info */}
+                            {formData.posterUrl && (
+                                <div className="flex items-center gap-4 p-4 bg-primary-900/20 border border-primary-500/30 rounded-lg mb-4">
+                                     <div className="w-12 h-16 bg-black/50 flex-shrink-0">
+                                        <img src={formData.posterUrl} alt="Preview" className="w-full h-full object-cover rounded" />
+                                     </div>
+                                     <div>
+                                         <p className="font-medium text-primary-200">Metadata imported from TMDB</p>
+                                         <p className="text-sm text-white/40">Poster and backdrop will be used unless you upload custom files.</p>
+                                     </div>
+                                </div>
+                            )}
+
                             <div>
                                 <label className="block text-sm font-medium text-white/60 mb-1">Title *</label>
                                 <input
@@ -465,7 +584,7 @@ const MediaManagement = () => {
                 {showSubtitleModal && selectedMedia && (
                     <Modal onClose={() => setShowSubtitleModal(false)} title={`Subtitles - ${selectedMedia.title}`}>
                         <div className="space-y-4">
-                            {/* Upload Subtitle */}
+                             {/* Upload Subtitle */}
                             <form onSubmit={handleSubtitleUpload} className="space-y-3 pb-4 border-b border-white/10">
                                 <h3 className="font-semibold">Upload New Subtitle</h3>
                                 <div className="grid grid-cols-2 gap-3">
