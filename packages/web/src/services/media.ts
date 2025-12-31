@@ -6,7 +6,7 @@ export interface Media {
     backdropUrl?: string;
     overview?: string;
     filePath: string;
-    type: 'movie' | 'tv' | 'series';
+    type: 'movie' | 'tv' | 'series' | 'show';
     genres?: string[];
 }
 
