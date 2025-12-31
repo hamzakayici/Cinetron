@@ -14,6 +14,21 @@ export class TranscodeService {
         const absoluteInputPath = this.resolvePath(inputPath);
         const absoluteOutputDir = this.resolvePath(outputDir); // e.g. ./public/uploads/videos
 
+        const inputExists = fs.existsSync(absoluteInputPath);
+        this.logger.log(`Starting transcoding. Input: '${inputPath}' -> Resolved: '${absoluteInputPath}' (Exists: ${inputExists})`);
+        
+        if (!inputExists) {
+            this.logger.error(`Input file does not exist at resolved path: ${absoluteInputPath}`);
+             // Try to list directory content to debug
+             const dir = path.dirname(absoluteInputPath);
+             try {
+                const files = fs.readdirSync(dir);
+                this.logger.error(`Directory contents of ${dir}: ${files.join(', ')}`);
+             } catch (e) {
+                this.logger.error(`Could not list directory ${dir}: ${e.message}`);
+             }
+        }
+        
         this.logger.log(`Starting transcoding for: ${absoluteInputPath}`);
         
         const qualities = [

@@ -448,14 +448,17 @@ export class MediaService implements OnModuleInit {
             const outputDir = '/files/uploads/videos';
             const filenameBase = path.parse(files.videoFile[0].filename).name;
 
+            this.logger.log(`Triggering transcoding for Media ${savedMedia.id}. Input: ${inputPath}`);
+
             this.transcodeService.transcodeMedia(inputPath, outputDir, filenameBase)
                 .then(async (qualities) => {
+                    this.logger.log(`Transcoding finished for Media ${savedMedia.id}. Qualities: ${JSON.stringify(qualities)}`);
                     savedMedia.qualities = qualities;
                     await this.mediaRepository.save(savedMedia);
-                    this.logger.log(`Transcoding complete for Media ${savedMedia.id}`);
+                    this.logger.log(`Media ${savedMedia.id} updated with qualities.`);
                 })
                 .catch(err => {
-                    this.logger.error(`Transcoding failed for Media ${savedMedia.id}`, err);
+                    this.logger.error(`Transcoding failed for Media ${savedMedia.id}`, err.stack);
                 });
         }
 
@@ -569,14 +572,17 @@ export class MediaService implements OnModuleInit {
             const outputDir = '/files/uploads/videos';
             const filenameBase = path.parse(files.videoFile[0].filename).name;
 
+            this.logger.log(`Triggering transcoding for Episode ${savedEpisode.id}. Input: ${inputPath}`);
+
             this.transcodeService.transcodeMedia(inputPath, outputDir, filenameBase)
                 .then(async (qualities) => {
+                    this.logger.log(`Transcoding finished for Episode ${savedEpisode.id}. Qualities: ${JSON.stringify(qualities)}`);
                     savedEpisode.qualities = qualities;
                     await this.episodeRepository.save(savedEpisode);
-                    this.logger.log(`Transcoding complete for Episode ${savedEpisode.id}`);
+                    this.logger.log(`Episode ${savedEpisode.id} updated with qualities.`);
                 })
                 .catch(err => {
-                    this.logger.error(`Transcoding failed for Episode ${savedEpisode.id}`, err);
+                    this.logger.error(`Transcoding failed for Episode ${savedEpisode.id}`, err.stack);
                 });
         }
 
