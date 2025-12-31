@@ -1,8 +1,10 @@
 import { useEffect, useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { getMedia, type Media } from '../../services/media';
 import MediaCard from '../../components/media/MediaCard';
 
 const Movies = () => {
+    const { t } = useTranslation();
     const [movies, setMovies] = useState<Media[]>([]);
     const [genres, setGenres] = useState<string[]>([]);
     const [years, setYears] = useState<number[]>([]);
@@ -62,39 +64,39 @@ const Movies = () => {
     return (
         <div className="min-h-screen bg-background p-8 pb-32">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                <h1 className="text-4xl font-bold text-white">Movies</h1>
+                <h1 className="text-4xl font-bold text-white">{t('sidebar.movies')}</h1>
                 
                 <div className="flex flex-wrap items-center gap-3">
                     {/* Genre Filter */}
                     <select 
                         value={selectedGenre} 
                         onChange={e => setSelectedGenre(e.target.value)}
-                        className="bg-white/10 text-white border border-white/20 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary-500"
+                        className="bg-white/20 text-white border border-white/30 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary-500 hover:bg-white/25 transition-colors font-medium"
                     >
-                        <option value="">All Genres</option>
-                        {genres.map(g => <option key={g} value={g}>{g}</option>)}
+                        <option value="" className="bg-surface text-white">{t('movies.allGenres')}</option>
+                        {genres.map(g => <option key={g} value={g} className="bg-surface text-white">{g}</option>)}
                     </select>
 
                     {/* Year Filter */}
                     <select 
                         value={selectedYear} 
                         onChange={e => setSelectedYear(e.target.value)}
-                        className="bg-white/10 text-white border border-white/20 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary-500"
+                        className="bg-white/20 text-white border border-white/30 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary-500 hover:bg-white/25 transition-colors font-medium"
                     >
-                        <option value="">All Years</option>
-                        {years.map(y => <option key={y} value={y}>{y}</option>)}
+                        <option value="" className="bg-surface text-white">{t('movies.allYears')}</option>
+                        {years.map(y => <option key={y} value={y} className="bg-surface text-white">{y}</option>)}
                     </select>
 
                     {/* Sort Order */}
                     <select 
                         value={sortOrder} 
                         onChange={e => setSortOrder(e.target.value)}
-                        className="bg-white/10 text-white border border-white/20 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary-500"
+                        className="bg-white/20 text-white border border-white/30 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary-500 hover:bg-white/25 transition-colors font-medium"
                     >
-                        <option value="newest">Newest First</option>
-                        <option value="oldest">Oldest First</option>
-                        <option value="az">A-Z</option>
-                        <option value="za">Z-A</option>
+                        <option value="newest" className="bg-surface text-white">{t('movies.newestFirst')}</option>
+                        <option value="oldest" className="bg-surface text-white">{t('movies.oldestFirst')}</option>
+                        <option value="az" className="bg-surface text-white">A-Z</option>
+                        <option value="za" className="bg-surface text-white">Z-A</option>
                     </select>
                 </div>
             </div>
@@ -105,7 +107,7 @@ const Movies = () => {
                 ))}
             </div>
             {filteredMovies.length === 0 && (
-                <div className="text-center text-white/50 mt-20">No filtered movies found.</div>
+                <div className="text-center text-white/50 mt-20">{t('movies.noResults')}</div>
             )}
         </div>
     );
