@@ -113,10 +113,8 @@ const MediaManagement = () => {
         
         setIsSearching(true);
         try {
-            // Determine type based on some heuristic or let user choose, defaulting to movie for now
-            // Or retrieve both? Let's just search 'movie' and 'tv'
-            const res = await searchMetadata(importQuery, 'movie'); 
-            // Also search TV? For now simplified to movie search, or add a toggle
+            // Search both movies and TV shows at once
+            const res = await searchMetadata(importQuery, 'all'); 
             setSearchResults(res.data);
         } catch (err) {
             console.error("Search failed", err);

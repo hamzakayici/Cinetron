@@ -280,10 +280,29 @@ export class MediaService implements OnModuleInit {
         return count > 0;
     }
 
-    async searchTMDB(query: string, type: 'movie' | 'tv', year?: number) {
+    async searchTMDB(query: string, type: 'movie' | 'tv' | 'all', year?: number) {
         // Check if query looks like an IMDB ID (e.g. tt1234567)
         if (query.startsWith('tt')) {
             return this.tmdbService.findByExternalId(query);
+        }
+
+        // Combined search - both movies and TV shows
+        if (type === 'all') {
+            const [movies, tvShows] = await Promise.all([
+                this.tmdbService.searchMovie(query, year),
+                this.tmdbService.searchTvShow(query, year),
+            ]);
+
+            // Tag results with their type and merge
+            const taggedMovies = (movies || []).map((m: any) => ({ ...m, media_type: 'movie' }));
+            const taggedTv = (tvShows || []).map((t: any) => ({ ...t, media_type: 'tv' }));
+            
+            // Combine and sort by popularity
+            const combined = [...taggedMovies, ...taggedTv].sort((a, b) => 
+                (b.popularity || 0) - (a.popularity || 0)
+            );
+            
+            return combined.slice(0, 20);
         }
 
         if (type === 'movie') {

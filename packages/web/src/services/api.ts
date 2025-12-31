@@ -84,7 +84,7 @@ export const deleteSubtitle = (mediaId: string, subtitleId: string) => {
 // System
 export const getSystemStats = () => api.get('/system/stats');
 
-export const searchMetadata = (query: string, type: 'movie' | 'tv', year?: number) => {
+export const searchMetadata = (query: string, type: 'movie' | 'tv' | 'all' = 'all', year?: number) => {
     return api.get('/media/metadata/search', { params: { q: query, type, year } });
 };
 

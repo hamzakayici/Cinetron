@@ -60,7 +60,7 @@ export class MediaController {
 
     @Get('metadata/search')
     @ApiOperation({ summary: 'Search TMDB for metadata' })
-    async searchMetadata(@Query('q') query: string, @Query('type') type: 'movie' | 'tv', @Query('year') year?: number) {
+    async searchMetadata(@Query('q') query: string, @Query('type') type: 'movie' | 'tv' | 'all' = 'all', @Query('year') year?: number) {
         return this.mediaService.searchTMDB(query, type, year);
     }
 
