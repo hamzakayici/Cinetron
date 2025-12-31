@@ -489,7 +489,6 @@ const MediaManagement = () => {
                                     >
                                         <option value="movie">{t('media.type.movie')}</option>
                                         <option value="series">{t('media.type.series')}</option>
-                                        <option value="tv">{t('media.type.tv')}</option>
                                     </select>
                                 </div>
                                 <div>
@@ -598,7 +597,6 @@ const MediaManagement = () => {
                                     >
                                         <option value="movie">{t('media.type.movie')}</option>
                                         <option value="series">{t('media.type.series')}</option>
-                                        <option value="tv">{t('media.type.tv')}</option>
                                     </select>
                                 </div>
                                 <div>

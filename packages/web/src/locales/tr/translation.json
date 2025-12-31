@@ -149,5 +149,12 @@
         "pending": "Sırada",
         "error": "Hata",
         "uploadingWithProgress": "Yükleniyor... {{progress}}%"
+    },
+    "media": {
+        "type": {
+            "movie": "Film",
+            "series": "Dizi",
+            "tv": "Dizi"
+        }
     }
 }
