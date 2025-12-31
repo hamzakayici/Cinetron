@@ -226,7 +226,7 @@ const MediaManagement = () => {
         }
 
         // Add to Queue
-        const queueType = formData.type === 'movie' ? 'movie' : 'show';
+        const queueType = formData.type === 'movie' ? 'movie' : 'series';
         
         addToQueue(
             {

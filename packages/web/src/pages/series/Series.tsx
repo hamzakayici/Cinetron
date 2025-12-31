@@ -18,7 +18,7 @@ const Series = () => {
         const fetchSeries = async () => {
             try {
                 const allMedia = await getMedia();
-                const seriesData = allMedia.filter(m => m.type === 'series' || m.type === 'tv');
+                const seriesData = allMedia.filter(m => m.type === 'series' || m.type === 'tv' || m.type === 'show');
                 setSeries(seriesData);
 
                 // Extract unique genres and years
