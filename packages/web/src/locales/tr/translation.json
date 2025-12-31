@@ -76,6 +76,8 @@
         }
     },
     "admin": {
+        "dashboard": "Yönetim Paneli",
+        "manageContent": "İçerik ve kullanıcıları yönetin",
         "mediaManagement": "Medya Yönetimi",
         "userManagement": "Kullanıcı Yönetimi",
         "importTmdb": "TMDB'den İçe Aktar",
