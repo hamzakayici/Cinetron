@@ -7,6 +7,26 @@ import { getSubtitles } from '../../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 
+// YouTube URL helpers
+const isYouTubeUrl = (url: string): boolean => {
+    if (!url) return false;
+    return url.includes('youtube.com') || url.includes('youtu.be');
+};
+
+const getYouTubeVideoId = (url: string): string | null => {
+    if (!url) return null;
+    // Match youtube.com/watch?v=VIDEO_ID
+    let match = url.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+    if (match) return match[1];
+    // Match youtu.be/VIDEO_ID
+    match = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+    if (match) return match[1];
+    // Match youtube.com/embed/VIDEO_ID
+    match = url.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/);
+    if (match) return match[1];
+    return null;
+};
+
 const Player = () => {
     const { t } = useTranslation();
     const { id } = useParams<{ id: string }>();
@@ -256,28 +276,43 @@ const Player = () => {
                 </button>
             </div>
 
-            <video
-                ref={videoRef}
-                src={media.playbackUrl}
-                className="h-full w-full object-contain"
-                onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
-                onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
-                onPlay={() => setIsPlaying(true)}
-                onPause={() => setIsPlaying(false)}
-                onClick={(e) => { e.stopPropagation(); togglePlay(); }}
-                crossOrigin="anonymous" // Important for loading subtitles from different origin
-            >
-                {subtitles.map(sub => (
-                    <track
-                        key={sub.id}
-                        kind="subtitles"
-                        src={sub.url}
-                        srcLang={sub.language}
-                        label={sub.label}
-                        default={sub.id === activeSubtitle}
+            {/* YouTube Player */}
+            {isYouTubeUrl(media.playbackUrl || '') ? (
+                <div className="h-full w-full flex items-center justify-center">
+                    <iframe
+                        src={`https://www.youtube.com/embed/${getYouTubeVideoId(media.playbackUrl || '')}?autoplay=1&rel=0&modestbranding=1`}
+                        className="w-full h-full"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        title={media.title}
                     />
-                ))}
-            </video>
+                </div>
+            ) : (
+                /* Standard Video Player */
+                <video
+                    ref={videoRef}
+                    src={media.playbackUrl}
+                    className="h-full w-full object-contain"
+                    onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
+                    onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+                    onPlay={() => setIsPlaying(true)}
+                    onPause={() => setIsPlaying(false)}
+                    onClick={(e) => { e.stopPropagation(); togglePlay(); }}
+                    crossOrigin="anonymous"
+                >
+                    {subtitles.map(sub => (
+                        <track
+                            key={sub.id}
+                            kind="subtitles"
+                            src={sub.url}
+                            srcLang={sub.language}
+                            label={sub.label}
+                            default={sub.id === activeSubtitle}
+                        />
+                    ))}
+                </video>
+            )}
 
             {/* Custom Controls Overlay */}
             <AnimatePresence>
