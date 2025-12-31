@@ -208,14 +208,17 @@ const MediaManagement = () => {
     const handleUpload = async (e: React.FormEvent) => {
         e.preventDefault();
         
-        // Validation
-        if (uploadMethod === 'file' && !files.video) {
-            alert(t('admin.videoFile') + " " + t('admin.required'));
-            return;
-        }
-        if (uploadMethod === 'link' && !formData.videoUrl) {
-            alert(t('admin.videoLinkRequired'));
-            return;
+        // Validation - video only required for movies, not for series
+        const isSeries = formData.type === 'series' || formData.type === 'tv';
+        if (!isSeries) {
+            if (uploadMethod === 'file' && !files.video) {
+                alert(t('admin.videoFile') + " " + t('admin.required'));
+                return;
+            }
+            if (uploadMethod === 'link' && !formData.videoUrl) {
+                alert(t('admin.videoLinkRequired'));
+                return;
+            }
         }
         if (!formData.title) {
             alert(t('admin.title') + " " + t('admin.required'));
