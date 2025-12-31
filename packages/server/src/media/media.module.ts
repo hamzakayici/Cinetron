@@ -9,12 +9,14 @@ import { Subtitle } from './subtitle.entity';
 import { TmdbService } from './tmdb.service';
 import { Episode } from './episode.entity';
 
+import { TranscodeService } from './transcode.service';
+
 @Module({
     imports: [
         TypeOrmModule.forFeature([Media, Episode, WatchHistory, Favorite, Subtitle]),
     ],
     controllers: [MediaController],
-    providers: [MediaService, TmdbService],
+    providers: [MediaService, TmdbService, TranscodeService],
     exports: [MediaService],
 })
 export class MediaModule { }

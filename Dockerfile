@@ -13,6 +13,7 @@ RUN pnpm run build
 
 # Server Image
 FROM base AS server
+RUN apk add --no-cache ffmpeg
 COPY . /usr/src/app
 WORKDIR /usr/src/app
 COPY --from=builder /usr/src/app/packages/server/dist /usr/src/app/packages/server/dist

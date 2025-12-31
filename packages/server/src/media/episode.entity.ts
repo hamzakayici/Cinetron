@@ -24,6 +24,9 @@ export class Episode {
     @Column({ nullable: true })
     stillUrl: string;
 
+    @Column({ type: 'simple-json', nullable: true })
+    qualities: Record<string, string>;
+
     @Column()
     mediaId: string;
 

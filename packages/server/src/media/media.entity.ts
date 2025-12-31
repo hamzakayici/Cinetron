@@ -54,6 +54,9 @@ export class Media {
     @OneToMany(() => Episode, (episode) => episode.media, { cascade: true })
     episodes: Episode[];
 
+    @Column({ type: 'simple-json', nullable: true })
+    qualities: Record<string, string>;
+
     @CreateDateColumn()
     createdAt: Date;
 

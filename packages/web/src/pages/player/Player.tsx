@@ -53,8 +53,13 @@ const Player = () => {
     const [activeSubtitle, setActiveSubtitle] = useState<string | null>(null);
 
     // Advanced Features State
+    // Advanced Features State
     const [playbackSpeed, setPlaybackSpeed] = useState(1);
     const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+    const [activeQuality, setActiveQuality] = useState<string>('Original');
+    const [videoSrc, setVideoSrc] = useState<string>('');
+    const [isQualitySwitching, setIsQualitySwitching] = useState(false);
+    const qualitySwitchTimeRef = useRef<number>(0);
     
     // Auto-play fix & Fetch Data
     useEffect(() => {
@@ -67,6 +72,7 @@ const Player = () => {
                     getSubtitles(id as string)
                 ]);
                 setMedia(mediaRes.data);
+                setVideoSrc(mediaRes.data.playbackUrl || '');
                 setSubtitles(subRes.data);
                 
                 if (progress > 10) { 
@@ -231,6 +237,33 @@ const Player = () => {
         }, 3000);
     };
 
+    const handleQualityChange = (quality: string, url: string) => {
+        if (!videoRef.current) return;
+        
+        qualitySwitchTimeRef.current = videoRef.current.currentTime;
+        setIsQualitySwitching(true);
+        setActiveQuality(quality);
+        setVideoSrc(url);
+        setShowSettingsMenu(false);
+        
+        // Auto-play after switch
+        setTimeout(() => {
+            if (videoRef.current) {
+               videoRef.current.play().catch(() => setIsPlaying(false));
+            }
+        }, 100);
+    };
+
+    const onVideoLoadedMetadata = (e: any) => {
+        setDuration(e.currentTarget.duration);
+        
+        if (isQualitySwitching) {
+            e.currentTarget.currentTime = qualitySwitchTimeRef.current;
+            setIsQualitySwitching(false);
+            if (isPlaying) e.currentTarget.play();
+        }
+    };
+
     const formatTime = (time: number) => {
         const minutes = Math.floor(time / 60);
         const seconds = Math.floor(time % 60);
@@ -304,12 +337,13 @@ const Player = () => {
                 </div>
             ) : (
                 /* Standard Video Player */
+                /* Standard Video Player */
                 <video
                     ref={videoRef}
-                    src={media.playbackUrl}
+                    src={videoSrc}
                     className="h-full w-full object-contain"
                     onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
-                    onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+                    onLoadedMetadata={onVideoLoadedMetadata}
                     onPlay={() => setIsPlaying(true)}
                     onPause={() => setIsPlaying(false)}
                     onClick={(e) => { e.stopPropagation(); togglePlay(); }}
@@ -454,8 +488,38 @@ const Player = () => {
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             exit={{ opacity: 0, y: 10 }}
-                                            className="absolute bottom-full right-0 mb-4 bg-black/90 border border-white/10 rounded-lg p-2 min-w-[160px] shadow-xl"
+                                            className="absolute bottom-full right-0 mb-4 bg-black/90 border border-white/10 rounded-lg p-2 min-w-[180px] shadow-xl max-h-[60vh] overflow-y-auto"
                                         >
+                                            {/* Quality Section */}
+                                            {media.qualities && Object.keys(media.qualities).length > 0 && (
+                                                <>
+                                                    <h4 className="px-3 py-2 text-xs font-bold text-white/40 uppercase tracking-wider">{t('player.quality')}</h4>
+                                                    
+                                                    {/* Original */}
+                                                    <button 
+                                                        onClick={() => handleQualityChange('Original', media.playbackUrl || '')}
+                                                        className="w-full flex items-center justify-between px-3 py-2 hover:bg-white/10 rounded text-sm text-left transition-colors"
+                                                    >
+                                                        <span>Original</span>
+                                                        {activeQuality === 'Original' && <Check size={14} className="text-primary-500" />}
+                                                    </button>
+
+                                                    {/* Other Qualities */}
+                                                    {Object.entries(media.qualities).map(([quality, path]) => (
+                                                        <button 
+                                                            key={quality} 
+                                                            onClick={() => handleQualityChange(quality, path)}
+                                                            className="w-full flex items-center justify-between px-3 py-2 hover:bg-white/10 rounded text-sm text-left transition-colors"
+                                                        >
+                                                            <span>{quality}</span>
+                                                            {activeQuality === quality && <Check size={14} className="text-primary-500" />}
+                                                        </button>
+                                                    ))}
+
+                                                    <div className="my-2 border-t border-white/10" />
+                                                </>
+                                            )}
+
                                             <h4 className="px-3 py-2 text-xs font-bold text-white/40 uppercase tracking-wider">{t('player.speed')}</h4>
                                             
                                             {[0.5, 0.75, 1, 1.25, 1.5, 2].map(speed => (

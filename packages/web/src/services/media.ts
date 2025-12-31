@@ -8,6 +8,8 @@ export interface Media {
     filePath: string;
     type: 'movie' | 'tv' | 'series' | 'show';
     genres?: string[];
+    tmdbId?: string;
+    qualities?: Record<string, string>;
 }
 
 const API_URL = import.meta.env.VITE_API_URL || '';

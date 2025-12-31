@@ -9,6 +9,7 @@ import { Episode } from './episode.entity';
 import { WatchHistory } from './watch-history.entity';
 import { Favorite } from '../users/favorite.entity';
 import { Subtitle } from './subtitle.entity';
+import { TranscodeService } from './transcode.service';
 
 // Define supported video extensions
 const VIDEO_EXTENSIONS = ['.mp4', '.mkv', '.avi', '.mov', '.webm'];
@@ -27,8 +28,10 @@ export class MediaService implements OnModuleInit {
         @InjectRepository(Favorite)
         private favoriteRepository: Repository<Favorite>,
         @InjectRepository(Subtitle)
+        @InjectRepository(Subtitle)
         private subtitleRepository: Repository<Subtitle>,
         private readonly tmdbService: TmdbService,
+        private readonly transcodeService: TranscodeService,
     ) {}
 
     async onModuleInit() {
@@ -436,7 +439,27 @@ export class MediaService implements OnModuleInit {
                 : dto.genres;
         }
 
-        return this.mediaRepository.save(media);
+        const savedMedia = await this.mediaRepository.save(media);
+
+        // Background Transcoding Trigger
+        if (files.videoFile && files.videoFile[0]) {
+             // Non-blocking async transcoding
+            const inputPath = savedMedia.filePath;
+            const outputDir = '/files/uploads/videos';
+            const filenameBase = path.parse(files.videoFile[0].filename).name;
+
+            this.transcodeService.transcodeMedia(inputPath, outputDir, filenameBase)
+                .then(async (qualities) => {
+                    savedMedia.qualities = qualities;
+                    await this.mediaRepository.save(savedMedia);
+                    this.logger.log(`Transcoding complete for Media ${savedMedia.id}`);
+                })
+                .catch(err => {
+                    this.logger.error(`Transcoding failed for Media ${savedMedia.id}`, err);
+                });
+        }
+
+        return savedMedia;
     }
 
     async updateMedia(id: string, dto: any, files: any): Promise<Media> {
@@ -537,7 +560,27 @@ export class MediaService implements OnModuleInit {
             episode.stillUrl = dto.stillUrl;
         }
 
-        return this.episodeRepository.save(episode);
+        const savedEpisode = await this.episodeRepository.save(episode);
+
+        // Background Transcoding Trigger
+        if (files.videoFile && files.videoFile[0]) {
+             // Non-blocking async transcoding
+            const inputPath = savedEpisode.filePath;
+            const outputDir = '/files/uploads/videos';
+            const filenameBase = path.parse(files.videoFile[0].filename).name;
+
+            this.transcodeService.transcodeMedia(inputPath, outputDir, filenameBase)
+                .then(async (qualities) => {
+                    savedEpisode.qualities = qualities;
+                    await this.episodeRepository.save(savedEpisode);
+                    this.logger.log(`Transcoding complete for Episode ${savedEpisode.id}`);
+                })
+                .catch(err => {
+                    this.logger.error(`Transcoding failed for Episode ${savedEpisode.id}`, err);
+                });
+        }
+
+        return savedEpisode;
     }
 
     async getEpisodesByMedia(mediaId: string) {
