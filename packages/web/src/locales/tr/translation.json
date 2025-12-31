@@ -125,6 +125,8 @@
         "subtitleUploadFailed": "Altyazı yüklenemedi.",
         "subtitleDeleted": "Altyazı silindi!",
         "subtitleFileLabel": "Altyazı Dosyası (.srt, .vtt)",
+        "seriesEpisodeInfo": "Dizi oluşturulduktan sonra bölümler ekleyebilirsiniz.",
+        "manageEpisodes": "Bölümleri Yönet",
         "required": "zorunludur",
         "userCreated": "Kullanıcı oluşturuldu!",
         "userCreateFailed": "Kullanıcı oluşturulamadı",

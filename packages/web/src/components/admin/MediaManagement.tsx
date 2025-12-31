@@ -564,39 +564,48 @@ const MediaManagement = () => {
                                 />
                             </div>
     
-                            {/* Upload Method Toggle */}
-                            <div className="bg-white/5 p-1 rounded-lg flex mb-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setUploadMethod('file')}
-                                    className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${uploadMethod === 'file' ? 'bg-primary-600 text-white shadow-lg' : 'text-white/60 hover:text-white'}`}
-                                >
-                                    {t('admin.uploadFile')}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setUploadMethod('link')}
-                                    className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${uploadMethod === 'link' ? 'bg-primary-600 text-white shadow-lg' : 'text-white/60 hover:text-white'}`}
-                                >
-                                    {t('admin.addLink')}
-                                </button>
-                            </div>
-
-                            {uploadMethod === 'file' ? (
-                                <FileInput label={t('admin.videoFile')} icon={Film} accept="video/*" onChange={e => handleFileChange(e, 'video')} file={files.video} />
-                            ) : (
-                                <div>
-                                    <label className="block text-sm font-medium text-white/60 mb-1">{t('admin.videoLink')}</label>
-                                    <div className="flex items-center gap-2 bg-black/50 border border-white/10 rounded-lg px-4 py-2 focus-within:border-primary-500">
-                                        <LinkIcon size={18} className="text-white/40" />
-                                        <input
-                                            type="url"
-                                            value={formData.videoUrl}
-                                            onChange={e => setFormData({...formData, videoUrl: e.target.value})}
-                                            className="flex-1 bg-transparent outline-none text-white placeholder-white/20"
-                                            placeholder="https://..."
-                                        />
+                            {/* Video Upload - Only for Movies */}
+                            {formData.type !== 'series' && formData.type !== 'tv' ? (
+                                <>
+                                    {/* Upload Method Toggle */}
+                                    <div className="bg-white/5 p-1 rounded-lg flex mb-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setUploadMethod('file')}
+                                            className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${uploadMethod === 'file' ? 'bg-primary-600 text-white shadow-lg' : 'text-white/60 hover:text-white'}`}
+                                        >
+                                            {t('admin.uploadFile')}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setUploadMethod('link')}
+                                            className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${uploadMethod === 'link' ? 'bg-primary-600 text-white shadow-lg' : 'text-white/60 hover:text-white'}`}
+                                        >
+                                            {t('admin.addLink')}
+                                        </button>
                                     </div>
+
+                                    {uploadMethod === 'file' ? (
+                                        <FileInput label={t('admin.videoFile')} icon={Film} accept="video/*" onChange={e => handleFileChange(e, 'video')} file={files.video} />
+                                    ) : (
+                                        <div>
+                                            <label className="block text-sm font-medium text-white/60 mb-1">{t('admin.videoLink')}</label>
+                                            <div className="flex items-center gap-2 bg-black/50 border border-white/10 rounded-lg px-4 py-2 focus-within:border-primary-500">
+                                                <LinkIcon size={18} className="text-white/40" />
+                                                <input
+                                                    type="url"
+                                                    value={formData.videoUrl}
+                                                    onChange={e => setFormData({...formData, videoUrl: e.target.value})}
+                                                    className="flex-1 bg-transparent outline-none text-white placeholder-white/20"
+                                                    placeholder="https://..."
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
+                            ) : (
+                                <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-center">
+                                    <p className="text-blue-400 text-sm">{t('admin.seriesEpisodeInfo')}</p>
                                 </div>
                             )}
 
