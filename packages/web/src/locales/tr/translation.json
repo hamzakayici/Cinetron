@@ -67,14 +67,6 @@
         "mediaNotFound": "İçerik bulunamadı",
         "loading": "Yükleniyor..."
     },
-    "media": {
-        "type": {
-            "movie": "Film",
-            "tv": "Dizi",
-            "series": "Dizi",
-            "show": "Dizi"
-        }
-    },
     "admin": {
         "dashboard": "Yönetim Paneli",
         "manageContent": "İçerik ve kullanıcıları yönetin",
@@ -155,8 +147,14 @@
     "media": {
         "type": {
             "movie": "Film",
-            "series": "Dizi",
-            "tv": "Dizi"
+            "series": "Dizi"
         }
+    },
+    "movies": {
+        "allGenres": "Tüm Türler",
+        "allYears": "Tüm Yıllar",
+        "newestFirst": "Yeniden Eskiye",
+        "oldestFirst": "Eskiden Yeniye",
+        "noResults": "Sonuç bulunamadı"
     }
 }
