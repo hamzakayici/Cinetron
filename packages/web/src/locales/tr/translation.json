@@ -61,11 +61,17 @@
         "mediaNotFound": "Medya bulunamadı"
     },
     "detail": {
+        "loading": "Yükleniyor...",
+        "mediaNotFound": "Medya bulunamadı",
+        "noOverview": "Açıklama yok",
         "moreLikeThis": "Benzer İçerikler",
-        "recommendationComingSoon": "Öneri motoru yakında geliyor...",
-        "noOverview": "Açıklama bulunamadı.",
-        "mediaNotFound": "İçerik bulunamadı",
-        "loading": "Yükleniyor..."
+        "recommendationComingSoon": "Öneriler yakında eklenecek",
+        "episodes": "Bölümler",
+        "episode": "Bölüm",
+        "episodeShort": "B",
+        "seasons": "Sezon",
+        "noEpisodes": "Bu sezon için bölüm bulunamadı",
+        "noVideo": "Video mevcut değil"
     },
     "admin": {
         "dashboard": "Yönetim Paneli",
