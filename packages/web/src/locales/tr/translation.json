@@ -156,5 +156,11 @@
         "newestFirst": "Yeniden Eskiye",
         "oldestFirst": "Eskiden Yeniye",
         "noResults": "Sonuç bulunamadı"
+    },
+    "mylist": {
+        "empty": "Listeniz boş. Film ve dizi ekleyin."
+    },
+    "history": {
+        "empty": "Henüz bir şey izlemediniz."
     }
 }
