@@ -9,7 +9,7 @@ export class Media {
     @Column()
     title: string;
 
-    @Column()
+    @Column({ nullable: true })
     filePath: string;
 
     @Column({ nullable: true })

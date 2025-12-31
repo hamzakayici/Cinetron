@@ -70,6 +70,15 @@ export class MediaController {
         return this.mediaService.getTMDBDetails(parseInt(id), type);
     }
 
+    @Get('metadata/tmdb/:id/season/:seasonNum')
+    @ApiOperation({ summary: 'Get TMDB season details with episodes' })
+    async getTMDBSeasonDetails(
+        @Param('id') id: string,
+        @Param('seasonNum') seasonNum: string,
+    ) {
+        return this.mediaService.getTMDBSeasonDetails(parseInt(id), parseInt(seasonNum));
+    }
+
     @Get('stream/external')
     @ApiOperation({ summary: 'Proxy external stream for playback' })
     async streamExternal(@Query('url') url: string, @Res() res) {

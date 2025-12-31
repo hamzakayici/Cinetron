@@ -93,4 +93,19 @@ export class TmdbService {
             return [];
         }
     }
+
+    async getSeasonDetails(tvId: number, seasonNumber: number) {
+        try {
+            const response = await axios.get(`${this.baseUrl}/tv/${tvId}/season/${seasonNumber}`, {
+                headers: this.headers,
+                params: { 
+                    language: 'tr-TR'
+                },
+            });
+            return response.data;
+        } catch (error) {
+            this.logger.error(`Error getting season ${seasonNumber} for TV ${tvId}`, error);
+            return null;
+        }
+    }
 }

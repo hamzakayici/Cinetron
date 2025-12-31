@@ -328,9 +328,39 @@ export class MediaService implements OnModuleInit {
                 director,
                 posterUrl: details.poster_path ? `https://image.tmdb.org/t/p/w500${details.poster_path}` : null,
                 backdropUrl: details.backdrop_path ? `https://image.tmdb.org/t/p/original${details.backdrop_path}` : null,
+                seasons: details.seasons || [], // Include seasons for TV shows
             };
         } catch (error) {
             this.logger.error(`Failed to get TMDB details for ${tmdbId}`, error);
+            return null;
+        }
+    }
+
+    async getTMDBSeasonDetails(tvId: number, seasonNumber: number) {
+        try {
+            const seasonData = await this.tmdbService.getSeasonDetails(tvId, seasonNumber);
+            if (!seasonData) {
+                return null;
+            }
+
+            // Format episodes
+            const episodes = seasonData.episodes?.map((ep: any) => ({
+                episodeNumber: ep.episode_number,
+                name: ep.name,
+                overview: ep.overview,
+                stillPath: ep.still_path ? `https://image.tmdb.org/t/p/w500${ep.still_path}` : null,
+                airDate: ep.air_date,
+                runtime: ep.runtime,
+            })) || [];
+
+            return {
+                seasonNumber: seasonData.season_number,
+                name: seasonData.name,
+                overview: seasonData.overview,
+                episodes,
+            };
+        } catch (error) {
+            this.logger.error(`Failed to get season ${seasonNumber} for TV ${tvId}`, error);
             return null;
         }
     }
@@ -342,13 +372,17 @@ export class MediaService implements OnModuleInit {
             type: dto.type,
             year: dto.year ? parseInt(dto.year) : undefined,
             overview: dto.overview,
+            filePath: '', // Will be set below if applicable
         });
 
-        // Handle file uploads
+        // Handle file uploads - video is optional for series
         if (files.videoFile && files.videoFile[0]) {
             media.filePath = `/files/uploads/videos/${files.videoFile[0].filename}`;
         } else if (dto.videoUrl) {
             media.filePath = dto.videoUrl;
+        } else if (dto.type === 'series' || dto.type === 'tv') {
+            // Series don't need a video file - episodes will have videos
+            media.filePath = null;
         }
 
         // Poster
