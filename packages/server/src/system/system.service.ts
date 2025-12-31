@@ -16,15 +16,16 @@ export class SystemService implements OnModuleInit {
     private async ensureAdminAccount() {
         const adminEmail = 'admin@cinetron.com';
         const adminPassword = 'admin123';
-        const passwordHash = await bcrypt.hash(adminPassword, 10);
-
+        // Note: UsersService handles hashing, so we pass plain password
+        // The property is named passwordHash in the entity/DTO but triggers hashing in service
+        
         try {
             const existingAdmin = await this.usersService.findOne(adminEmail);
 
             if (!existingAdmin) {
                 await this.usersService.create({
                     email: adminEmail,
-                    passwordHash,
+                    passwordHash: adminPassword, // Pass plain text, service will hash it
                     firstName: 'Admin',
                     lastName: 'User',
                     role: UserRole.ADMIN,
@@ -32,7 +33,7 @@ export class SystemService implements OnModuleInit {
                 this.logger.log('Admin user created successfully.');
             } else {
                 // FORCE RESET PASSWORD ON STARTUP TO ENSURE ACCESS
-                await this.usersService.updatePassword(existingAdmin.id, passwordHash);
+                await this.usersService.updatePassword(existingAdmin.id, adminPassword);
                 this.logger.log('Admin password reset to default (admin123) for security/demo purposes.');
             }
         } catch (error) {
