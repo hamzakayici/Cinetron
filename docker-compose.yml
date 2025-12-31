@@ -9,6 +9,8 @@ services:
     restart: always
     ports:
       - "3000:80"
+    volumes:
+      - cinetron_uploads:/app/packages/server/public
     environment:
       # Database
       DB_HOST: postgres
@@ -48,3 +50,4 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  cinetron_uploads:
