@@ -293,6 +293,48 @@ export class MediaService implements OnModuleInit {
         }
     }
 
+    async getTMDBDetails(tmdbId: number, type: 'movie' | 'tv') {
+        try {
+            let details;
+            if (type === 'movie') {
+                details = await this.tmdbService.getMovieDetails(tmdbId);
+            } else {
+                details = await this.tmdbService.getTvShowDetails(tmdbId);
+            }
+
+            if (!details) {
+                return null;
+            }
+
+            // Format response with all needed metadata
+            const credits = type === 'movie' ? details.credits : details.aggregate_credits;
+            const cast = credits?.cast?.slice(0, 10).map((actor: any) => ({
+                name: actor.name,
+                character: type === 'movie' ? actor.character : actor.roles?.[0]?.character || '',
+                profile_path: actor.profile_path
+            })) || [];
+
+            const director = credits?.crew?.find((member: any) => member.job === 'Director')?.name || '';
+
+            return {
+                tmdbId: details.id,
+                title: details.title || details.name,
+                originalTitle: details.original_title || details.original_name,
+                overview: details.overview,
+                releaseDate: details.release_date || details.first_air_date,
+                runtime: details.runtime || details.episode_run_time?.[0],
+                genres: details.genres?.map((g: any) => g.name) || [],
+                cast,
+                director,
+                posterUrl: details.poster_path ? `https://image.tmdb.org/t/p/w500${details.poster_path}` : null,
+                backdropUrl: details.backdrop_path ? `https://image.tmdb.org/t/p/original${details.backdrop_path}` : null,
+            };
+        } catch (error) {
+            this.logger.error(`Failed to get TMDB details for ${tmdbId}`, error);
+            return null;
+        }
+    }
+
     // Admin CRUD Methods
     async createMedia(dto: any, files: any): Promise<Media> {
         const media = this.mediaRepository.create({
@@ -321,6 +363,24 @@ export class MediaService implements OnModuleInit {
             media.backdropUrl = `/files/uploads/images/${files.backdropFile[0].filename}`;
         } else if (dto.backdropUrl) {
             media.backdropUrl = dto.backdropUrl;
+        }
+
+        // TMDB Metadata
+        if (dto.tmdbId) media.tmdbId = parseInt(dto.tmdbId);
+        if (dto.director) media.director = dto.director;
+        if (dto.runtime) media.runtime = parseInt(dto.runtime);
+        if (dto.releaseDate) media.releaseDate = new Date(dto.releaseDate);
+        if (dto.cast) {
+            try {
+                media.cast = typeof dto.cast === 'string' ? JSON.parse(dto.cast) : dto.cast;
+            } catch (e) {
+                this.logger.warn('Failed to parse cast data', e);
+            }
+        }
+        if (dto.genres) {
+            media.genres = typeof dto.genres === 'string' 
+                ? dto.genres.split(',').map((g: string) => g.trim()) 
+                : dto.genres;
         }
 
         return this.mediaRepository.save(media);

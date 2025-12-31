@@ -33,6 +33,21 @@ export class Media {
     @Column("text", { array: true, default: [] })
     genres: string[];
 
+    @Column({ type: 'jsonb', nullable: true })
+    cast: { name: string; character: string; profile_path: string | null }[];
+
+    @Column({ nullable: true })
+    director: string;
+
+    @Column({ nullable: true })
+    tmdbId: number;
+
+    @Column({ nullable: true })
+    runtime: number; // in minutes
+
+    @Column({ type: 'date', nullable: true })
+    releaseDate: Date;
+
     @Column({ default: false })
     processed: boolean; // True if transcoding is done/not needed
 

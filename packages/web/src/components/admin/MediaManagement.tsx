@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, Trash2, Edit2, Plus, Film, Image as ImageIcon, Subtitles as SubtitlesIcon, X, DownloadCloud, Link as LinkIcon } from 'lucide-react';
 import { useUploadQueue } from '../../context/UploadQueueContext';
-import { getMedia, updateMedia, deleteMedia, getSubtitles, uploadSubtitle, deleteSubtitle, searchMetadata } from '../../services/api';
+import api, { getMedia, updateMedia, deleteMedia, getSubtitles, uploadSubtitle, deleteSubtitle, searchMetadata } from '../../services/api';
 
 interface Media {
     id: string;
@@ -59,7 +59,10 @@ const MediaManagement = () => {
         backdropUrl: '',
         tmdbId: '',
         videoUrl: '',
-        genres: '' // Comma separated string for input
+        genres: '', // Comma separated string for input
+        cast: '', // JSON string
+        director: '',
+        runtime: ''
     });
 
     const [files, setFiles] = useState<{
@@ -122,19 +125,67 @@ const MediaManagement = () => {
         }
     };
 
-    const handleImportSelect = (item: any) => {
-        setFormData({
-            title: item.title || item.name,
-            originalTitle: item.original_title || item.original_name,
-            overview: item.overview,
-            releaseDate: (item.release_date || item.first_air_date || '').split('-')[0],
-            type: item.title ? 'movie' : 'tv', 
-            posterUrl: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '',
-            backdropUrl: item.backdrop_path ? `https://image.tmdb.org/t/p/original${item.backdrop_path}` : '',
-            tmdbId: item.id,
-            videoUrl: '',
-            genres: ''
-        });
+    const handleImportSelect = async (item: any) => {
+        try {
+            // Fetch full details from TMDB
+            const type = item.title ? 'movie' : 'tv';
+            const detailsRes = await api.get(`/media/metadata/tmdb/${item.id}`, { params: { type } });
+            const details = detailsRes.data;
+
+            if (details) {
+                setFormData({
+                    title: details.title,
+                    originalTitle: details.originalTitle || '',
+                    overview: details.overview || '',
+                    releaseDate: details.releaseDate ? details.releaseDate.split('-')[0] : '',
+                    type: type === 'movie' ? 'movie' : 'series',
+                    posterUrl: details.posterUrl || '',
+                    backdropUrl: details.backdropUrl || '',
+                    tmdbId: details.tmdbId?.toString() || '',
+                    videoUrl: '',
+                    genres: details.genres?.join(', ') || '',
+                    cast: JSON.stringify(details.cast || []),
+                    director: details.director || '',
+                    runtime: details.runtime?.toString() || ''
+                });
+            } else {
+                // Fallback to basic search result data
+                setFormData({
+                    title: item.title || item.name,
+                    originalTitle: item.original_title || item.original_name,
+                    overview: item.overview,
+                    releaseDate: (item.release_date || item.first_air_date || '').split('-')[0],
+                    type: item.title ? 'movie' : 'tv', 
+                    posterUrl: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '',
+                    backdropUrl: item.backdrop_path ? `https://image.tmdb.org/t/p/original${item.backdrop_path}` : '',
+                    tmdbId: item.id,
+                    videoUrl: '',
+                    genres: '',
+                    cast: '',
+                    director: '',
+                    runtime: ''
+                });
+            }
+        } catch (error) {
+            console.error('Failed to fetch TMDB details', error);
+            // Use basic search result as fallback
+            setFormData({
+                title: item.title || item.name,
+                originalTitle: item.original_title || item.original_name,
+                overview: item.overview,
+                releaseDate: (item.release_date || item.first_air_date || '').split('-')[0],
+                type: item.title ? 'movie' : 'tv', 
+                posterUrl: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '',
+                backdropUrl: item.backdrop_path ? `https://image.tmdb.org/t/p/original${item.backdrop_path}` : '',
+                tmdbId: item.id,
+                videoUrl: '',
+                genres: '',
+                cast: '',
+                director: '',
+                runtime: ''
+            });
+        }
+
         setShowImportModal(false);
         setShowUploadModal(true);
     };
@@ -240,7 +291,7 @@ const MediaManagement = () => {
     };
     
     const resetForm = () => {
-        setFormData({ title: '', originalTitle: '', overview: '', releaseDate: '', type: 'movie', posterUrl: '', backdropUrl: '', tmdbId: '', videoUrl: '', genres: '' });
+        setFormData({ title: '', originalTitle: '', overview: '', releaseDate: '', type: 'movie', posterUrl: '', backdropUrl: '', tmdbId: '', videoUrl: '', genres: '', cast: '', director: '', runtime: '' });
         setFiles({ video: null, poster: null, backdrop: null });
         setSelectedMedia(null);
         setImportQuery('');

@@ -64,6 +64,12 @@ export class MediaController {
         return this.mediaService.searchTMDB(query, type, year);
     }
 
+    @Get('metadata/tmdb/:id')
+    @ApiOperation({ summary: 'Get full TMDB details for a movie/show' })
+    async getTMDBDetails(@Param('id') id: string, @Query('type') type: 'movie' | 'tv') {
+        return this.mediaService.getTMDBDetails(parseInt(id), type);
+    }
+
     @Get('stream/external')
     @ApiOperation({ summary: 'Proxy external stream for playback' })
     async streamExternal(@Query('url') url: string, @Res() res) {
