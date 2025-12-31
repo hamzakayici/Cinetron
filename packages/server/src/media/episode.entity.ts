@@ -18,7 +18,7 @@ export class Episode {
     @Column({ type: 'text', nullable: true })
     overview: string;
 
-    @Column()
+    @Column({ nullable: true })
     filePath: string;
 
     @Column({ nullable: true })
