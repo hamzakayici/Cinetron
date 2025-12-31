@@ -63,7 +63,7 @@ const Movies = () => {
 
     return (
         <div className="min-h-screen bg-background p-8 pb-32">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-background/95 backdrop-blur-sm rounded-xl p-6 border border-white/10">
                 <h1 className="text-4xl font-bold text-white">{t('sidebar.movies')}</h1>
                 
                 <div className="flex flex-wrap items-center gap-3">
