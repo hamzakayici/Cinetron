@@ -16,6 +16,11 @@ import { UserRole } from '../users/user.entity';
 const storage = diskStorage({
     destination: (req, file, cb) => {
         const dest = file.fieldname === 'videoFile' ? './public/uploads/videos' : './public/uploads/images';
+        // Ensure directory exists
+        const fs = require('fs');
+        if (!fs.existsSync(dest)) {
+            fs.mkdirSync(dest, { recursive: true });
+        }
         cb(null, dest);
     },
     filename: (req, file, cb) => {
