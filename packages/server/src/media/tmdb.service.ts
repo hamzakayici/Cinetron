@@ -13,14 +13,30 @@ export class TmdbService {
 
     async searchMovie(query: string, year?: number) {
         try {
-            const params: any = { query };
-            if (year) params.year = year;
-
-            const response = await axios.get(`${this.baseUrl}/search/movie`, {
+            // Multi-strategy search: Turkish + English for better results
+            const trResponse = await axios.get(`${this.baseUrl}/search/movie`, {
                 headers: this.headers,
-                params: { ...params, language: 'tr-TR' },
+                params: { query, language: 'tr-TR', year, include_adult: false },
             });
-            return response.data.results;
+
+            const enResponse = await axios.get(`${this.baseUrl}/search/movie`, {
+                headers: this.headers,
+                params: { query, language: 'en-US', year, include_adult: false },
+            });
+
+            // Merge and deduplicate by ID
+            const allResults = [...(trResponse.data.results || []), ...(enResponse.data.results || [])];
+            const uniqueResults = Array.from(new Map(allResults.map(item => [item.id, item])).values());
+
+            // Sort: exact match first, then by popularity
+            const sorted = uniqueResults.sort((a, b) => {
+                const aMatch = a.title?.toLowerCase().includes(query.toLowerCase()) ? 1 : 0;
+                const bMatch = b.title?.toLowerCase().includes(query.toLowerCase()) ? 1 : 0;
+                if (aMatch !== bMatch) return bMatch - aMatch;
+                return (b.popularity || 0) - (a.popularity || 0);
+            });
+
+            return sorted.slice(0, 20);
         } catch (error) {
             this.logger.error(`Error searching movie: ${query}`, error);
             return [];
@@ -29,14 +45,30 @@ export class TmdbService {
 
     async searchTvShow(query: string, year?: number) {
         try {
-            const params: any = { query };
-            if (year) params.first_air_date_year = year;
-
-            const response = await axios.get(`${this.baseUrl}/search/tv`, {
+            // Multi-strategy search: Turkish + English for better results
+            const trResponse = await axios.get(`${this.baseUrl}/search/tv`, {
                 headers: this.headers,
-                params: { ...params, language: 'tr-TR' },
+                params: { query, language: 'tr-TR', first_air_date_year: year, include_adult: false },
             });
-            return response.data.results;
+
+            const enResponse = await axios.get(`${this.baseUrl}/search/tv`, {
+                headers: this.headers,
+                params: { query, language: 'en-US', first_air_date_year: year, include_adult: false },
+            });
+
+            // Merge and deduplicate by ID
+            const allResults = [...(trResponse.data.results || []), ...(enResponse.data.results || [])];
+            const uniqueResults = Array.from(new Map(allResults.map(item => [item.id, item])).values());
+
+            // Sort: exact match first, then by popularity
+            const sorted = uniqueResults.sort((a, b) => {
+                const aMatch = a.name?.toLowerCase().includes(query.toLowerCase()) ? 1 : 0;
+                const bMatch = b.name?.toLowerCase().includes(query.toLowerCase()) ? 1 : 0;
+                if (aMatch !== bMatch) return bMatch - aMatch;
+                return (b.popularity || 0) - (a.popularity || 0);
+            });
+
+            return sorted.slice(0, 20);
         } catch (error) {
             this.logger.error(`Error searching TV show: ${query}`, error);
             return [];
