@@ -25,6 +25,9 @@ services:
       # Redis
       REDIS_HOST: redis
       REDIS_PORT: 6379
+
+      # TMDB
+      TMDB_Read_Token: ${TMDB_READ_TOKEN}
     depends_on:
       - postgres
       - redis
