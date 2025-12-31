@@ -225,8 +225,8 @@ const MediaManagement = () => {
             return;
         }
 
-        // Add to Queue
-        const queueType = formData.type === 'movie' ? 'movie' : 'series';
+        // Add to Queue - use 'show' as that's the UploadQueue type
+        const queueType = formData.type === 'movie' ? 'movie' : 'show';
         
         addToQueue(
             {
