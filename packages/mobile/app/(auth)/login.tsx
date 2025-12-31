@@ -4,6 +4,7 @@ import { Stack } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import api, { setServerUrl, getServerUrl } from '../../services/api';
 import { StatusBar } from 'expo-status-bar';
+import { t } from '../../services/i18n';
 
 export default function Login() {
     const [email, setEmail] = useState('');
@@ -19,7 +20,7 @@ export default function Login() {
 
     const handleLogin = async () => {
         if (!email || !password) {
-            Alert.alert('Hata', 'Lütfen e-posta ve şifrenizi girin');
+            Alert.alert(t('common.error'), t('login.errorEmpty'));
             return;
         }
 
@@ -36,8 +37,8 @@ export default function Login() {
         } catch (err: any) {
             console.error(err);
             Alert.alert(
-                'Giriş Başarısız', 
-                err.response?.data?.message || 'Sunucuya bağlanılamadı. Lütfen sunucu adresini kontrol edin.'
+                t('login.errorTitle'), 
+                err.response?.data?.message || t('login.errorServer')
             );
         } finally {
             setLoading(false);

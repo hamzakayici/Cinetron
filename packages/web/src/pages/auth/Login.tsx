@@ -72,7 +72,7 @@ const Login = () => {
                                         type="email"
                                         required
                                         className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/20 outline-none transition-all focus:border-primary-500 focus:bg-white/10 focus:ring-1 focus:ring-primary-500"
-                                        placeholder="Enter your email"
+                                        placeholder={t('login.emailPlaceholder')}
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                     />

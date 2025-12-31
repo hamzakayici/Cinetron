@@ -40,21 +40,21 @@ const Admin = () => {
             await api.post('/users', newUser);
             setShowCreateModal(false);
             setNewUser({ email: '', password: '', firstName: '', lastName: '', role: 'viewer' });
-            alert("User created!");
+            alert(t('admin.userCreated'));
             fetchUsers();
         } catch (err) {
-            alert("Failed to create user");
+            alert(t('admin.userCreateFailed'));
         }
     };
 
     const handleDeleteUser = async (id: string, email: string) => {
-        if (!confirm(`Are you sure you want to delete user ${email}?`)) return;
+        if (!confirm(t('admin.userDeleteConfirm', { email }))) return;
         try {
             await deleteUser(id);
-            alert("User deleted!");
+            alert(t('admin.userDeleted'));
             fetchUsers();
         } catch (err) {
-            alert("Failed to delete user");
+            alert(t('admin.userDeleteFailed'));
         }
     };
 
@@ -69,12 +69,12 @@ const Admin = () => {
         if (!selectedUser) return;
         try {
             await updateUserPassword(selectedUser.id, newPassword);
-            alert("Password updated!");
+            alert(t('admin.passwordUpdated'));
             setShowPasswordModal(false);
             setSelectedUser(null);
             setNewPassword('');
         } catch (err) {
-            alert("Failed to update password");
+            alert(t('admin.passwordUpdateFailed'));
         }
     };
 
@@ -136,7 +136,7 @@ const Admin = () => {
                                             <td className="px-6 py-4">{user.firstName} {user.lastName}</td>
                                             <td className="px-6 py-4">
                                                 <span className={`px-2 py-1 rounded text-xs font-bold ${user.role === 'admin' ? 'bg-primary-500/20 text-primary-400' : 'bg-white/10 text-white/60'}`}>
-                                                    {user.role ? user.role.toUpperCase() : 'VIEWER'}
+                                                    {user.role === 'admin' ? t('admin.roleAdmin') : t('admin.roleViewer')}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-right">
@@ -219,8 +219,8 @@ const Admin = () => {
                                         onChange={e => setNewUser({ ...newUser, role: e.target.value })}
                                         className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-2 focus:border-primary-500 outline-none transition-colors text-white"
                                     >
-                                        <option value="viewer">Viewer</option>
-                                        <option value="admin">Admin</option>
+                                        <option value="viewer">{t('admin.roleViewer')}</option>
+                                        <option value="admin">{t('admin.roleAdmin')}</option>
                                     </select>
                                 </div>
                                 <div className="flex gap-4 pt-4">
@@ -248,7 +248,7 @@ const Admin = () => {
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
                         <div className="bg-surface border border-white/10 rounded-2xl p-8 max-w-md w-full">
                             <h2 className="text-2xl font-bold mb-2">{t('admin.changePassword')}</h2>
-                            <p className="text-white/60 text-sm mb-6">Updating password for <b>{selectedUser.email}</b></p>
+                            <p className="text-white/60 text-sm mb-6" dangerouslySetInnerHTML={{ __html: t('admin.updatingPasswordFor', { email: selectedUser.email }) }}></p>
                             
                             <form onSubmit={handleUpdatePassword} className="space-y-4">
                                 <div>

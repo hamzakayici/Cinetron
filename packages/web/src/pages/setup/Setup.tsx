@@ -36,7 +36,7 @@ const Setup = () => {
             setStep(2); // Success step
         } catch (err: any) {
             console.error(err);
-            setError(err.response?.data?.message || 'Setup failed');
+            setError(err.response?.data?.message || t('setup.failed'));
             setIsLoading(false);
         }
     };

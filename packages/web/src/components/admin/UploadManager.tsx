@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { useUploadQueue } from '../../context/UploadQueueContext';
 import { ChevronUp, ChevronDown, RefreshCw, CheckCircle, AlertCircle, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 const UploadManager = () => {
+    const { t } = useTranslation();
     const { queue, removeFromQueue, retryUpload, clearCompleted } = useUploadQueue();
     const [isExpanded, setIsExpanded] = useState(true);
 
@@ -34,22 +36,30 @@ const UploadManager = () => {
                         )}
                         <span className="font-semibold text-white text-sm">
                             {activeUploads.length > 0 
-                                ? `Yükleniyor (${activeUploads.length})` 
-                                : `Tamamlandı (${completedUploads.length})`}
+                                ? `${t('upload.uploading')} (${activeUploads.length})` 
+                                : `${t('upload.completed')} (${completedUploads.length})`}
                         </span>
                     </div>
-                    <div className="flex items-center gap-1">
+                </div>
+
+                <div className="flex items-center gap-1 absolute right-3 top-3 pointer-events-none">
+                     {/* Placeholder to keep layout consistent if needed, or handle absolute buttons outside onClick parent if they interfere */}
+                </div>
+
+                {/* Re-implementing header correctly with stopPropagation for buttons */}
+                 <div className="absolute right-3 top-3 flex items-center gap-1">
                         {completedUploads.length > 0 && isExpanded && (
                             <button 
                                 onClick={(e) => { e.stopPropagation(); clearCompleted(); }}
                                 className="text-xs text-white/40 hover:text-white px-2 py-1 rounded hover:bg-white/10 mr-2"
                             >
-                                Temizle
+                                {t('upload.clear')}
                             </button>
                         )}
-                        {isExpanded ? <ChevronDown size={18} className="text-white/60" /> : <ChevronUp size={18} className="text-white/60" />}
-                    </div>
-                </div>
+                        <button onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}>
+                             {isExpanded ? <ChevronDown size={18} className="text-white/60" /> : <ChevronUp size={18} className="text-white/60" />}
+                        </button>
+                  </div>
 
                 {/* Body */}
                 <AnimatePresence>
@@ -67,10 +77,10 @@ const UploadManager = () => {
                                             <div className="overflow-hidden pr-2">
                                                 <div className="text-sm text-white font-medium truncate">{item.metadata.title}</div>
                                                 <div className="text-xs text-white/40 flex items-center gap-1">
-                                                    {item.status === 'uploading' && <span className="text-blue-400">Yükleniyor... {item.progress}%</span>}
-                                                    {item.status === 'pending' && <span className="text-white/40">Sırada</span>}
-                                                    {item.status === 'completed' && <span className="text-green-400">Tamamlandı</span>}
-                                                    {item.status === 'error' && <span className="text-red-400">Hata: {item.errorMessage}</span>}
+                                                    {item.status === 'uploading' && <span className="text-blue-400">{t('upload.uploadingWithProgress', { progress: item.progress })}</span>}
+                                                    {item.status === 'pending' && <span className="text-white/40">{t('upload.pending')}</span>}
+                                                    {item.status === 'completed' && <span className="text-green-400">{t('upload.completed')}</span>}
+                                                    {item.status === 'error' && <span className="text-red-400">{t('upload.error')}: {item.errorMessage}</span>}
                                                 </div>
                                             </div>
                                             <div className="flex gap-1">

@@ -43,6 +43,6 @@ export class SystemController {
             role: UserRole.ADMIN,
         });
 
-        return { message: 'Setup complete' };
+        return { message: 'Kurulum tamamlandı' };
     }
 }

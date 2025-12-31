@@ -1,5 +1,5 @@
 # --- Builder Stage (Node) ---
-FROM node:18-alpine AS node-builder
+FROM node:20-alpine AS node-builder
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
@@ -10,6 +10,7 @@ COPY . .
 # Install dependencies and build
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 RUN pnpm run build
+RUN pnpm prune --prod
 
 # --- Builder Stage (Go) ---
 FROM golang:1.21-alpine AS go-builder
@@ -19,7 +20,7 @@ RUN go mod download
 RUN go build -o /media-engine ./cmd/server
 
 # --- Final Stage ---
-FROM node:18-alpine
+FROM node:20-alpine
 
 # Install system dependencies
 RUN apk add --no-cache ffmpeg nginx supervisor curl

@@ -43,8 +43,8 @@ export class AuthService {
         if (user) {
             const hash = await bcrypt.hash('admin123', 10);
             await this.usersService.updatePassword(user.id, hash);
-            return { message: 'Admin password reset to admin123' };
+            return { message: 'Yönetici şifresi admin123 olarak sıfırlandı' };
         }
-        return { message: 'Admin user not found' };
+        return { message: 'Yönetici kullanıcısı bulunamadı' };
     }
 }

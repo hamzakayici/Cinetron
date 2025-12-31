@@ -5,8 +5,10 @@ import api from '../../services/api';
 import { type Media, saveProgress, getProgress } from '../../services/media';
 import { getSubtitles } from '../../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 const Player = () => {
+    const { t } = useTranslation();
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -216,7 +218,7 @@ const Player = () => {
     };
 
     if (isLoading) return <div className="flex h-screen items-center justify-center bg-black text-white"><Loader2 className="animate-spin" /></div>;
-    if (!media) return <div className="flex h-screen items-center justify-center bg-black text-white">Media not found</div>;
+    if (!media) return <div className="flex h-screen items-center justify-center bg-black text-white">{t('player.mediaNotFound')}</div>;
 
     return (
         <div
@@ -237,11 +239,11 @@ const Player = () => {
                         className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
                     >
                         <div className="bg-surface border border-white/10 p-8 rounded-2xl max-w-md w-full text-center">
-                            <h2 className="text-2xl font-bold mb-2">Resume Watching?</h2>
-                            <p className="text-white/60 mb-8">You left off at {formatTime(initialProgress)}</p>
+                            <h2 className="text-2xl font-bold mb-2">{t('player.resumeTitle')}</h2>
+                            <p className="text-white/60 mb-8">{t('player.resumeMessage', { time: formatTime(initialProgress) })}</p>
                             <div className="flex gap-4 justify-center">
-                                <button onClick={handleResume} className="px-6 py-3 bg-primary-600 rounded-lg font-bold hover:bg-primary-700 transition">Resume</button>
-                                <button onClick={handleStartOver} className="px-6 py-3 bg-white/10 rounded-lg font-bold hover:bg-white/20 transition">Start Over</button>
+                                <button onClick={handleResume} className="px-6 py-3 bg-primary-600 rounded-lg font-bold hover:bg-primary-700 transition">{t('player.resume')}</button>
+                                <button onClick={handleStartOver} className="px-6 py-3 bg-white/10 rounded-lg font-bold hover:bg-white/20 transition">{t('player.startOver')}</button>
                             </div>
                         </div>
                     </motion.div>
@@ -342,7 +344,7 @@ const Player = () => {
                                     <button 
                                         onClick={() => setShowSubtitleMenu(!showSubtitleMenu)} 
                                         className={`transition ${activeSubtitle ? 'text-primary-500' : 'text-white hover:text-primary-500'}`}
-                                        title="Subtitles"
+                                        title={t('player.subtitles')}
                                     >
                                         <SubtitlesIcon size={24} />
                                     </button>
@@ -355,13 +357,13 @@ const Player = () => {
                                             exit={{ opacity: 0, y: 10 }}
                                             className="absolute bottom-full right-0 mb-4 bg-black/90 border border-white/10 rounded-lg p-2 min-w-[200px] shadow-xl"
                                         >
-                                            <h4 className="px-3 py-2 text-xs font-bold text-white/40 uppercase tracking-wider">Subtitles</h4>
+                                            <h4 className="px-3 py-2 text-xs font-bold text-white/40 uppercase tracking-wider">{t('player.subtitles')}</h4>
                                             
                                             <button 
                                                 onClick={() => { setActiveSubtitle(null); setShowSubtitleMenu(false); }}
                                                 className="w-full flex items-center justify-between px-3 py-2 hover:bg-white/10 rounded text-sm text-left transition-colors"
                                             >
-                                                <span>Off</span>
+                                                <span>{t('player.off')}</span>
                                                 {!activeSubtitle && <Check size={14} className="text-primary-500" />}
                                             </button>
                                             
@@ -380,7 +382,7 @@ const Player = () => {
                                             ))}
                                             
                                             {subtitles.length === 0 && (
-                                                <div className="px-3 py-2 text-sm text-white/40">No subtitles available</div>
+                                                <div className="px-3 py-2 text-sm text-white/40">{t('player.noSubtitles')}</div>
                                             )}
                                         </motion.div>
                                     )}
@@ -392,7 +394,7 @@ const Player = () => {
                                     <button 
                                         onClick={(e) => { e.stopPropagation(); setShowSettingsMenu(!showSettingsMenu); setShowSubtitleMenu(false); }} 
                                         className={`transition ${showSettingsMenu ? 'text-primary-500' : 'text-white hover:text-primary-500'}`}
-                                        title="Settings"
+                                        title={t('player.settings')}
                                     >
                                         <Settings size={24} />
                                     </button>
@@ -405,7 +407,7 @@ const Player = () => {
                                             exit={{ opacity: 0, y: 10 }}
                                             className="absolute bottom-full right-0 mb-4 bg-black/90 border border-white/10 rounded-lg p-2 min-w-[160px] shadow-xl"
                                         >
-                                            <h4 className="px-3 py-2 text-xs font-bold text-white/40 uppercase tracking-wider">Speed</h4>
+                                            <h4 className="px-3 py-2 text-xs font-bold text-white/40 uppercase tracking-wider">{t('player.speed')}</h4>
                                             
                                             {[0.5, 0.75, 1, 1.25, 1.5, 2].map(speed => (
                                                 <button 
@@ -422,11 +424,11 @@ const Player = () => {
                                     </AnimatePresence>
                                 </div>
 
-                                <button onClick={togglePiP} className="text-white hover:text-white/80 hidden sm:block" title="Picture in Picture">
+                                <button onClick={togglePiP} className="text-white hover:text-white/80 hidden sm:block" title={t('player.pip')}>
                                     <PictureInPicture size={24} />
                                 </button>
 
-                                <button onClick={toggleFullscreen} className="text-white hover:text-white/80" title="Fullscreen">
+                                <button onClick={toggleFullscreen} className="text-white hover:text-white/80" title={t('player.fullscreen')}>
                                     <Maximize size={24} />
                                 </button>
                             </div>

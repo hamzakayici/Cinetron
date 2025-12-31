@@ -15,7 +15,8 @@
         "lastName": "Soyad",
         "complete": "Kurulumu Tamamla",
         "success": "Kurulum Başarılı!",
-        "redirecting": "Yönlendiriliyorsunuz..."
+        "redirecting": "Yönlendiriliyorsunuz...",
+        "failed": "Kurulum başarısız oldu"
     },
     "login": {
         "title": "Giriş Yap",
@@ -23,7 +24,8 @@
         "password": "Şifre",
         "submit": "İzlemeye Başla",
         "invalidCredentials": "Giriş bilgileri geçersiz. Lütfen tekrar deneyin.",
-        "managedBy": "Dahili kimlik doğrulama sistemi tarafından yönetilmektedir"
+        "managedBy": "Dahili kimlik doğrulama sistemi tarafından yönetilmektedir",
+        "emailPlaceholder": "E-postanızı girin"
     },
     "sidebar": {
         "home": "Anasayfa",
@@ -43,6 +45,20 @@
         "recentlyAdded": "Son Eklenenler",
         "scifi": "Bilim Kurgu & Fantastik",
         "exploreAll": "Tümünü Gör"
+    },
+    "player": {
+        "resumeTitle": "İzlemeye Devam Et?",
+        "resumeMessage": "Kaldığınız yer: {{time}}",
+        "resume": "Devam Et",
+        "startOver": "Baştan Başla",
+        "subtitles": "Altyazılar",
+        "off": "Kapalı",
+        "noSubtitles": "Altyazı bulunamadı",
+        "speed": "Hız",
+        "settings": "Ayarlar",
+        "pip": "Pencere İçinde Pencere",
+        "fullscreen": "Tam Ekran",
+        "mediaNotFound": "Medya bulunamadı"
     },
     "detail": {
         "moreLikeThis": "Benzer İçerikler",
@@ -95,13 +111,43 @@
         "noSubtitles": "Henüz altyazı yüklenmedi",
         "deleteConfirm": "Bu medyayı silmek istediğinize emin misiniz?",
         "subtitleDeleteConfirm": "Bu altyazıyı silmek istediğinize emin misiniz?",
-        "userDeleteConfirm": "Bu kullanıcıyı silmek istediğinize emin misiniz?",
+        "userDeleteConfirm": "{{email}} kullanıcısını silmek istediğinizden emin misiniz?",
         "createUser": "Yeni Kullanıcı Oluştur",
         "changePassword": "Şifre Değiştir",
         "newPassword": "Yeni Şifre",
         "updatePassword": "Şifreyi Güncelle",
         "actions": "İşlemler",
         "role": "Rol",
-        "chooseFile": "Dosya seç..."
+        "chooseFile": "Dosya seç...",
+        "videoLink": "Video Bağlantısı",
+        "videoLinkRequired": "Video bağlantısı zorunludur",
+        "uploadFile": "Dosya Yükle",
+        "addLink": "Bağlantı Ekle",
+        "updateSuccess": "Güncelleme başarılı!",
+        "updateFailed": "Güncelleme başarısız oldu.",
+        "deleteSuccess": "Medya silindi!",
+        "deleteFailed": "Silme işlemi başarısız oldu.",
+        "subtitleUploaded": "Altyazı yüklendi!",
+        "subtitleUploadFailed": "Altyazı yüklenemedi.",
+        "subtitleDeleted": "Altyazı silindi!",
+        "subtitleFileLabel": "Altyazı Dosyası (.srt, .vtt)",
+        "required": "zorunludur",
+        "userCreated": "Kullanıcı oluşturuldu!",
+        "userCreateFailed": "Kullanıcı oluşturulamadı",
+        "userDeleted": "Kullanıcı silindi!",
+        "userDeleteFailed": "Kullanıcı silinemedi",
+        "passwordUpdated": "Şifre güncellendi!",
+        "passwordUpdateFailed": "Şifre güncellenemedi",
+        "updatingPasswordFor": "<b>{{email}}</b> için şifre güncelleniyor",
+        "roleViewer": "İzleyici",
+        "roleAdmin": "Yönetici"
+    },
+    "upload": {
+        "uploading": "Yükleniyor",
+        "completed": "Tamamlandı",
+        "clear": "Temizle",
+        "pending": "Sırada",
+        "error": "Hata",
+        "uploadingWithProgress": "Yükleniyor... {{progress}}%"
     }
 }

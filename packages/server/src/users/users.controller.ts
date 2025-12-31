@@ -47,7 +47,7 @@ export class UsersController {
     @ApiOperation({ summary: 'Update user password (Admin only)' })
     async updatePassword(@Param('id') id: string, @Body('password') password: string) {
         await this.usersService.updatePassword(id, password);
-        return { message: 'Password updated successfully' };
+        return { message: 'Şifre başarıyla güncellendi' };
     }
 
     @Delete(':id')
@@ -55,6 +55,6 @@ export class UsersController {
     @ApiOperation({ summary: 'Delete user (Admin only)' })
     async delete(@Param('id') id: string) {
         await this.usersService.delete(id);
-        return { message: 'User deleted successfully' };
+        return { message: 'Kullanıcı başarıyla silindi' };
     }
 }

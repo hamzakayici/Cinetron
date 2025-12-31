@@ -10,6 +10,7 @@ import { Link } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Play, Plus } from 'lucide-react-native';
+import { t } from '../../services/i18n';
 
 // Check if running on TV (only use Platform.isTV flag)
 const isTV = Platform.isTV;
@@ -60,8 +61,8 @@ export default function HomeScreen() {
         >
           {/* TV Header */}
           <View className="px-12 py-6">
-            <Text className="text-white text-4xl font-bold font-sans">Cinetron</Text>
-            <Text className="text-gray-400 text-xl font-sans mt-2">Kişisel sinemanıza hoş geldiniz</Text>
+            <Text className="text-white text-4xl font-bold font-sans">{t('welcome.title')}</Text>
+            <Text className="text-gray-400 text-xl font-sans mt-2">{t('welcome.subtitle')}</Text>
           </View>
 
           {/* Hero Section (TV Optimized - More compact) */}
@@ -75,7 +76,7 @@ export default function HomeScreen() {
                   resizeMode="cover"
                 />
                 <View className="flex-1 ml-8 justify-center">
-                  <Text className="text-primary-400 font-bold font-sans text-lg uppercase mb-2">Öne Çıkan</Text>
+                  <Text className="text-primary-400 font-bold font-sans text-lg uppercase mb-2">{t('home.featured')}</Text>
                   <Text className="text-white text-5xl font-bold font-sans mb-4">{heroItem.title}</Text>
                   <Text className="text-gray-300 text-xl font-sans mb-6 leading-8" numberOfLines={4}>
                     {heroItem.overview}
@@ -84,7 +85,7 @@ export default function HomeScreen() {
                     <Link href={`/media/${heroItem.id}`} asChild>
                       <TouchableOpacity className="bg-primary px-8 py-4 rounded-xl flex-row items-center">
                         <Play size={28} color="white" fill="white" />
-                        <Text className="text-white font-bold font-sans text-2xl ml-3">İzle</Text>
+                        <Text className="text-white font-bold font-sans text-2xl ml-3">{t('home.watch')}</Text>
                       </TouchableOpacity>
                     </Link>
                   </View>
@@ -95,11 +96,11 @@ export default function HomeScreen() {
 
           {/* Content Rows */}
           {history.length > 0 && (
-            <TVRow title="Kaldığın Yerden Devam Et" items={history.map((h: any) => h.media)} />
+            <TVRow title={t('home.continueWatching')} items={history.map((h: any) => h.media)} />
           )}
-          <TVRow title="Son Eklenenler" items={recentAdded} />
-          {movies.length > 0 && <TVRow title="Filmler" items={movies} />}
-          {series.length > 0 && <TVRow title="Diziler" items={series} />}
+          <TVRow title={t('home.recentlyAdded')} items={recentAdded} />
+          {movies.length > 0 && <TVRow title={t('home.movies')} items={movies} />}
+          {series.length > 0 && <TVRow title={t('home.series')} items={series} />}
         </ScrollView>
       </View>
     );
@@ -136,7 +137,7 @@ export default function HomeScreen() {
               style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'flex-end', padding: 24 }}
             >
               <Text className="text-primary-400 font-bold tracking-widest text-xs uppercase mb-2 font-sans">
-                Öne Çıkan
+                {t('home.featured')}
               </Text>
               <Text className="text-white text-3xl font-bold mb-3 shadow-lg font-sans" numberOfLines={2}>
                 {heroItem.title}
@@ -149,7 +150,7 @@ export default function HomeScreen() {
                 <Link href={`/media/${heroItem.id}`} asChild>
                     <TouchableOpacity className="bg-primary px-6 py-3 rounded-lg flex-1 flex-row items-center justify-center active:scale-95 transition-transform shadow-lg shadow-purple-500/30">
                         <Play size={20} color="white" fill="white" />
-                        <Text className="text-white font-bold ml-2 font-sans">İzle</Text>
+                        <Text className="text-white font-bold ml-2 font-sans">{t('home.watch')}</Text>
                     </TouchableOpacity>
                 </Link>
                 <Link href={`/media/${heroItem.id}`} asChild>
@@ -166,7 +167,7 @@ export default function HomeScreen() {
           {history.length > 0 && (
             <View style={{ marginBottom: 32 }}>
               <View className="flex-row items-center justify-between mb-4">
-                <Text className="text-white text-lg font-bold font-sans">Kaldığın Yerden Devam Et</Text>
+                <Text className="text-white text-lg font-bold font-sans">{t('home.continueWatching')}</Text>
               </View>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 20 }}>
                 {history.map((item) => (
@@ -180,7 +181,7 @@ export default function HomeScreen() {
             </View>
           )}
           <View style={{ marginBottom: 32 }}>
-            <Text className="text-white text-lg font-bold font-sans mb-4">Son Eklenenler</Text>
+            <Text className="text-white text-lg font-bold font-sans mb-4">{t('home.recentlyAdded')}</Text>
             <View className="flex-row flex-wrap justify-between">
               {recentAdded.map((media) => (
                 <View key={media.id} className="mb-4">
@@ -191,7 +192,7 @@ export default function HomeScreen() {
           </View>
           {series.length > 0 && (
             <View style={{ marginBottom: 32 }}>
-              <Text className="text-white text-lg font-bold font-sans mb-4">Diziler</Text>
+              <Text className="text-white text-lg font-bold font-sans mb-4">{t('home.series')}</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 {series.map((media) => (
                   <View key={media.id} className="mr-4">
@@ -203,7 +204,7 @@ export default function HomeScreen() {
           )}
           {movies.length > 0 && (
             <View style={{ marginBottom: 32 }}>
-              <Text className="text-white text-lg font-bold font-sans mb-4">Filmler</Text>
+              <Text className="text-white text-lg font-bold font-sans mb-4">{t('home.movies')}</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 {movies.map((media) => (
                   <View key={media.id} className="mr-4">

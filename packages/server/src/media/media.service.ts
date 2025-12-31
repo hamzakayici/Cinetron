@@ -208,7 +208,7 @@ export class MediaService implements OnModuleInit {
     async scanLibrary(): Promise<{ message: string, added: number, details?: any }> {
         this.logger.log('Library scan requested');
         return {
-            message: 'Library scan not implemented - use admin upload interface',
+            message: 'Kütüphane taraması henüz uygulanmadı - yönetici yükleme arayüzünü kullanın',
             added: 0,
         };
     }
@@ -263,16 +263,16 @@ export class MediaService implements OnModuleInit {
 
     async addFavorite(userId: string, mediaId: string) {
         const existing = await this.favoriteRepository.findOne({ where: { userId, mediaId } });
-        if (existing) return { message: 'Already in favorites' };
+        if (existing) return { message: 'Favorilerde zaten mevcut' };
 
         const favorite = this.favoriteRepository.create({ userId, mediaId });
         await this.favoriteRepository.save(favorite);
-        return { message: 'Added to favorites' };
+        return { message: 'Favorilere eklendi' };
     }
 
     async removeFavorite(userId: string, mediaId: string) {
         await this.favoriteRepository.delete({ userId, mediaId });
-        return { message: 'Removed from favorites' };
+        return { message: 'Favorilerden çıkarıldı' };
     }
 
     async checkFavorite(userId: string, mediaId: string): Promise<boolean> {
@@ -329,7 +329,7 @@ export class MediaService implements OnModuleInit {
     async updateMedia(id: string, dto: any, files: any): Promise<Media> {
         const media = await this.mediaRepository.findOne({ where: { id } });
         if (!media) {
-            throw new Error('Media not found');
+            throw new Error('Medya bulunamadı');
         }
 
         // Update basic fields
@@ -365,7 +365,7 @@ export class MediaService implements OnModuleInit {
     async deleteMedia(id: string): Promise<void> {
         const media = await this.mediaRepository.findOne({ where: { id } });
         if (!media) {
-            throw new Error('Media not found');
+            throw new Error('Medya bulunamadı');
         }
 
         // TODO: Delete associated files from filesystem

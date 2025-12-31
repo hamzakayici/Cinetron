@@ -7,6 +7,7 @@ import { getMediaDetail, getEpisodeDetail, getSubtitles } from '../../services/a
 import Slider from '@react-native-community/slider';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { t } from '../../services/i18n';
 
 const isTV = Platform.isTV || Platform.OS === 'android';
 
@@ -194,7 +195,7 @@ export default function PlayerScreen() {
     if (!playbackUrl) {
         return (
             <View className="flex-1 bg-black justify-center items-center">
-                <Text className="text-white text-xl font-sans">Yükleniyor...</Text>
+                <Text className="text-white text-xl font-sans">{t('common.loading')}</Text>
             </View>
         );
     }
@@ -324,7 +325,7 @@ export default function PlayerScreen() {
                 {/* Locked State Overlay */}
                 {showControls && isLocked && (
                     <View className="absolute inset-0 justify-center items-center z-40 pointer-events-none">
-                         <Text className="text-white/50 font-bold bg-black/40 px-4 py-2 rounded-lg">Screen Locked</Text>
+                         <Text className="text-white/50 font-bold bg-black/40 px-4 py-2 rounded-lg">{t('player.locked')}</Text>
                     </View>
                 )}
 
@@ -405,12 +406,12 @@ export default function PlayerScreen() {
                                 onPress={() => setShowSubtitleMenu(false)}
                             >
                                 <View className="bg-gray-900 w-3/4 rounded-xl overflow-hidden border border-white/10">
-                                    <Text className="text-white font-bold p-4 bg-gray-800 border-b border-white/10">Altyazılar</Text>
+                                    <Text className="text-white font-bold p-4 bg-gray-800 border-b border-white/10">{t('player.subtitles')}</Text>
                                     <TouchableOpacity
                                         onPress={() => { setActiveSubtitle(null); setShowSubtitleMenu(false); }}
                                         className="p-4 border-b border-white/5 flex-row justify-between"
                                     >
-                                        <Text className="text-white">Kapalı</Text>
+                                        <Text className="text-white">{t('player.off')}</Text>
                                         {!activeSubtitle && <Check size={20} color="#8b5cf6" />}
                                     </TouchableOpacity>
                                     {subtitles.map(sub => (

@@ -151,15 +151,15 @@ const MediaManagement = () => {
         
         // Validation
         if (uploadMethod === 'file' && !files.video) {
-            alert(t('admin.videoFile') + " " + t('required'));
+            alert(t('admin.videoFile') + " " + t('admin.required'));
             return;
         }
         if (uploadMethod === 'link' && !formData.videoUrl) {
-            alert("Video Link " + t('required'));
+            alert(t('admin.videoLinkRequired'));
             return;
         }
         if (!formData.title) {
-            alert(t('admin.title') + " " + t('required'));
+            alert(t('admin.title') + " " + t('admin.required'));
             return;
         }
 
@@ -207,9 +207,6 @@ const MediaManagement = () => {
             }
 
             // Handle Video Update (File or Link)
-            // Existing logic only handled file. Let's assume edit also supports link now? 
-            // The prompt "media olarak link ile de mediayı ekleyebilmek istiyorum" implies addition, but users likely want to edit it too.
-            // Let's add videoUrl to update as well.
             if (formData.videoUrl) formDataToSend.append('videoUrl', formData.videoUrl);
 
             if (files.video) formDataToSend.append('videoFile', files.video);
@@ -217,13 +214,13 @@ const MediaManagement = () => {
             if (files.backdrop) formDataToSend.append('backdropFile', files.backdrop);
 
             await updateMedia(selectedMedia.id, formDataToSend);
-            alert(t('admin.update') + ' successful!');
+            alert(t('admin.updateSuccess'));
             setShowEditModal(false);
             resetForm();
             fetchMedia();
         } catch (err) {
             console.error('Update failed', err);
-            alert('Update failed');
+            alert(t('admin.updateFailed'));
         } finally {
             setIsSubmitting(false);
         }
@@ -234,14 +231,14 @@ const MediaManagement = () => {
 
         try {
             await deleteMedia(id);
-            alert('Media deleted!');
+            alert(t('admin.deleteSuccess'));
             fetchMedia();
         } catch (err) {
             console.error('Delete failed', err);
-            alert('Delete failed');
+            alert(t('admin.deleteFailed'));
         }
     };
-
+    
     const resetForm = () => {
         setFormData({ title: '', originalTitle: '', overview: '', releaseDate: '', type: 'movie', posterUrl: '', backdropUrl: '', tmdbId: '', videoUrl: '', genres: '' });
         setFiles({ video: null, poster: null, backdrop: null });
@@ -262,7 +259,6 @@ const MediaManagement = () => {
             posterUrl: media.posterUrl || '',
             backdropUrl: media.backdropUrl || '',
             tmdbId: '',
-            // If filePath starts with http, it's a link. Otherwise it's a file path but we can still populate videoUrl
             videoUrl: media.filePath?.startsWith('http') ? media.filePath : '',
             genres: media.genres ? media.genres.join(', ') : ''
         });
@@ -291,7 +287,7 @@ const MediaManagement = () => {
             formDataToSend.append('label', subtitleLabel);
 
             await uploadSubtitle(selectedMedia.id, formDataToSend);
-            alert('Subtitle uploaded!');
+            alert(t('admin.subtitleUploaded'));
             setSubtitleFile(null);
             setSubtitleLang('en');
             setSubtitleLabel('English');
@@ -301,7 +297,7 @@ const MediaManagement = () => {
             setSubtitles(res.data);
         } catch (err) {
             console.error('Subtitle upload failed', err);
-            alert('Subtitle upload failed');
+            alert(t('admin.subtitleUploadFailed'));
         }
     };
 
@@ -310,12 +306,12 @@ const MediaManagement = () => {
 
         try {
             await deleteSubtitle(selectedMedia.id, subtitleId);
-            alert('Subtitle deleted!');
+            alert(t('admin.subtitleDeleted'));
             const res = await getSubtitles(selectedMedia.id);
             setSubtitles(res.data);
         } catch (err) {
             console.error('Subtitle delete failed', err);
-            alert('Delete failed');
+            alert(t('admin.deleteFailed'));
         }
     };
 
@@ -516,7 +512,7 @@ const MediaManagement = () => {
                                     className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-2 focus:border-primary-500 outline-none resize-none"
                                 />
                             </div>
-
+    
                             {/* Upload Method Toggle */}
                             <div className="bg-white/5 p-1 rounded-lg flex mb-2">
                                 <button
@@ -524,14 +520,14 @@ const MediaManagement = () => {
                                     onClick={() => setUploadMethod('file')}
                                     className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${uploadMethod === 'file' ? 'bg-primary-600 text-white shadow-lg' : 'text-white/60 hover:text-white'}`}
                                 >
-                                    Dosya Yükle
+                                    {t('admin.uploadFile')}
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setUploadMethod('link')}
                                     className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${uploadMethod === 'link' ? 'bg-primary-600 text-white shadow-lg' : 'text-white/60 hover:text-white'}`}
                                 >
-                                    Link Ekle
+                                    {t('admin.addLink')}
                                 </button>
                             </div>
 
@@ -539,7 +535,7 @@ const MediaManagement = () => {
                                 <FileInput label={t('admin.videoFile')} icon={Film} accept="video/*" onChange={e => handleFileChange(e, 'video')} file={files.video} />
                             ) : (
                                 <div>
-                                    <label className="block text-sm font-medium text-white/60 mb-1">Video Linki</label>
+                                    <label className="block text-sm font-medium text-white/60 mb-1">{t('admin.videoLink')}</label>
                                     <div className="flex items-center gap-2 bg-black/50 border border-white/10 rounded-lg px-4 py-2 focus-within:border-primary-500">
                                         <LinkIcon size={18} className="text-white/40" />
                                         <input
@@ -687,7 +683,7 @@ const MediaManagement = () => {
                                     </div>
                                 </div>
                                 <FileInput
-                                    label="Subtitle File (.srt, .vtt)"
+                                    label={t('admin.subtitleFileLabel')}
                                     icon={SubtitlesIcon}
                                     accept=".srt,.vtt"
                                     onChange={e => setSubtitleFile(e.target.files?.[0] || null)}

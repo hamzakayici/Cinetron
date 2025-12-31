@@ -6,6 +6,7 @@ import { Media, Episode } from '../../constants/Types';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Play, Heart } from 'lucide-react-native';
+import { t } from '../../services/i18n';
 
 export default function MediaDetailScreen() {
     const { id } = useLocalSearchParams();
@@ -53,7 +54,7 @@ export default function MediaDetailScreen() {
     }
 
     if (!media) {
-        return <View className="flex-1 bg-background justify-center items-center"><Text className="text-white font-sans">Media Not Found</Text></View>;
+        return <View className="flex-1 bg-background justify-center items-center"><Text className="text-white font-sans">{t('media.notFound')}</Text></View>;
     }
 
     return (
@@ -113,18 +114,18 @@ export default function MediaDetailScreen() {
                             onPress={() => router.push(`/player/${media.id}`)}
                         >
                             <Play color="white" fill="white" size={20} />
-                            <Text className="text-white font-bold ml-2 font-sans">Hemen İzle</Text>
+                            <Text className="text-white font-bold ml-2 font-sans">{t('media.watchNow')}</Text>
                         </TouchableOpacity>
                    )}
 
                     <Text className="text-gray-300 leading-7 font-sans mb-8 text-base">
-                        {media.overview || "Özet bulunamadı."}
+                        {media.overview || t('media.noOverview')}
                     </Text>
 
                     {/* Episodes List */}
                     {media.type === 'series' && media.episodes && media.episodes.length > 0 && (
                         <View>
-                            <Text className="text-white text-lg font-bold font-sans mb-4">Bölümler</Text>
+                            <Text className="text-white text-lg font-bold font-sans mb-4">{t('media.episodes')}</Text>
                             {media.episodes.map((episode) => (
                                 <View key={episode.id} className="mb-4 bg-gray-900 rounded-lg overflow-hidden flex-row">
                                      <View className="w-32 h-20 bg-gray-800 relative">
