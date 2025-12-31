@@ -15,16 +15,9 @@ const isYouTubeUrl = (url: string): boolean => {
 
 const getYouTubeVideoId = (url: string): string | null => {
     if (!url) return null;
-    // Match youtube.com/watch?v=VIDEO_ID
-    let match = url.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
-    if (match) return match[1];
-    // Match youtu.be/VIDEO_ID
-    match = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
-    if (match) return match[1];
-    // Match youtube.com/embed/VIDEO_ID
-    match = url.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/);
-    if (match) return match[1];
-    return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
 };
 
 const Player = () => {
@@ -254,7 +247,7 @@ const Player = () => {
         }, 100);
     };
 
-    const onVideoLoadedMetadata = (e: any) => {
+    const onVideoLoadedMetadata = (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
         setDuration(e.currentTarget.duration);
         
         if (isQualitySwitching) {
