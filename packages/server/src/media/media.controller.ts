@@ -210,7 +210,34 @@ export class MediaController {
         @Body('language') language: string,
         @Body('label') label: string,
     ) {
-        return this.mediaService.addSubtitle(mediaId, file.filename, language, label);
+        const fs = require('fs');
+        const path = require('path');
+
+        let finalFilename = file.filename;
+        let finalPath = file.path;
+
+        // Check if conversion is needed (SRT -> VTT)
+        if (file.originalname.toLowerCase().endsWith('.srt')) {
+            const srtContent = fs.readFileSync(file.path, 'utf8');
+            
+            // Simple SRT to VTT conversion
+            // 1. Add WEBVTT header
+            // 2. Convert comma decimal separators to dots (00:00:20,000 -> 00:00:20.000)
+            const vttContent = 'WEBVTT\n\n' + srtContent.replace(/(\d{2}:\d{2}:\d{2}),(\d{3})/g, '$1.$2');
+
+            // Save as .vtt
+            const vttFilename = file.filename.replace(/\.srt$/i, '.vtt');
+            const vttPath = path.join(path.dirname(file.path), vttFilename);
+
+            fs.writeFileSync(vttPath, vttContent);
+            
+            // Delete original SRT
+            fs.unlinkSync(file.path);
+
+            finalFilename = vttFilename;
+        }
+
+        return this.mediaService.addSubtitle(mediaId, finalFilename, language, label);
     }
 
     @Get(':id/subtitles')
