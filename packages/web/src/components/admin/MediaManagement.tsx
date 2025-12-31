@@ -39,7 +39,7 @@ const MediaManagement = () => {
     
     // Episode Management State
     const [episodeList, setEpisodeList] = useState<Record<string, Array<{ id: string; title: string; episodeNumber: number; seasonNumber: number; filePath?: string }>>>({});
-    const [episodeForm, setEpisodeForm] = useState({ seasonNumber: '1', episodeNumber: '1', title: '', overview: '', videoUrl: '' });
+    const [episodeForm, setEpisodeForm] = useState({ seasonNumber: '1', episodeNumber: '1', title: '', overview: '', videoUrl: '', stillUrl: '' });
     const [episodeFile, setEpisodeFile] = useState<File | null>(null);
     const [tmdbSeasons, setTmdbSeasons] = useState<Array<{ season_number: number; name: string; episode_count: number }>>([]);
     const [tmdbEpisodeList, setTmdbEpisodeList] = useState<Array<{ episodeNumber: number; name: string; overview: string; stillPath?: string }>>([]);
@@ -368,7 +368,7 @@ const MediaManagement = () => {
     };
 
     const handleSeasonChange = async (seasonNum: string) => {
-        setEpisodeForm({ ...episodeForm, seasonNumber: seasonNum, episodeNumber: '1' });
+        setEpisodeForm({ ...episodeForm, seasonNumber: seasonNum, episodeNumber: '1', stillUrl: '' });
         setTmdbEpisodeList([]);
         
         if (selectedMedia?.tmdbId && seasonNum) {
@@ -390,10 +390,11 @@ const MediaManagement = () => {
                 ...episodeForm,
                 episodeNumber: epNum,
                 title: ep.name,
-                overview: ep.overview || ''
+                overview: ep.overview || '',
+                stillUrl: ep.stillPath || ''
             });
         } else {
-            setEpisodeForm({ ...episodeForm, episodeNumber: epNum });
+            setEpisodeForm({ ...episodeForm, episodeNumber: epNum, stillUrl: '' });
         }
     };
 
@@ -407,6 +408,7 @@ const MediaManagement = () => {
             formDataToSend.append('episodeNumber', episodeForm.episodeNumber);
             formDataToSend.append('title', episodeForm.title);
             formDataToSend.append('overview', episodeForm.overview);
+            if (episodeForm.stillUrl) formDataToSend.append('stillUrl', episodeForm.stillUrl);
             
             if (episodeFile) {
                 formDataToSend.append('videoFile', episodeFile);
@@ -422,7 +424,7 @@ const MediaManagement = () => {
             
             // Reset form
             setEpisodeFile(null);
-            setEpisodeForm({ ...episodeForm, title: '', overview: '', videoUrl: '' });
+            setEpisodeForm({ ...episodeForm, title: '', overview: '', videoUrl: '', stillUrl: '' });
             
             alert(t('admin.episodeAdded'));
         } catch (err) {

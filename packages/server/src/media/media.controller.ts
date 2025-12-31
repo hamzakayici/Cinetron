@@ -232,8 +232,19 @@ export class MediaController {
         let finalPath = file.path;
 
         // Check if conversion is needed (SRT -> VTT)
+        // Check if conversion is needed (SRT -> VTT)
         if (file.originalname.toLowerCase().endsWith('.srt')) {
-            const srtContent = fs.readFileSync(file.path, 'utf8');
+            const buffer = fs.readFileSync(file.path);
+            
+            // Detect Encoding
+            const jschardet = require('jschardet');
+            const iconv = require('iconv-lite');
+            
+            const detected = jschardet.detect(buffer);
+            const encoding = detected.encoding || 'utf-8';
+            
+            // Decode content to UTF-8 string
+            const srtContent = iconv.decode(buffer, encoding);
             
             // Simple SRT to VTT conversion
             // 1. Add WEBVTT header
@@ -244,7 +255,8 @@ export class MediaController {
             const vttFilename = file.filename.replace(/\.srt$/i, '.vtt');
             const vttPath = path.join(path.dirname(file.path), vttFilename);
 
-            fs.writeFileSync(vttPath, vttContent);
+            // Write as UTF-8
+            fs.writeFileSync(vttPath, vttContent, 'utf8');
             
             // Delete original SRT
             fs.unlinkSync(file.path);
