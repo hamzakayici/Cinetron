@@ -88,5 +88,20 @@ export const searchMetadata = (query: string, type: 'movie' | 'tv' | 'all' = 'al
     return api.get('/media/metadata/search', { params: { q: query, type, year } });
 };
 
+// Episode Management
+export const getEpisodes = (mediaId: string) => api.get(`/media/${mediaId}/episodes`);
+
+export const addEpisode = (mediaId: string, formData: FormData) => {
+    return api.post(`/media/${mediaId}/episodes`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    });
+};
+
+export const deleteEpisode = (episodeId: string) => api.delete(`/media/episodes/${episodeId}`);
+
+export const getTMDBSeasonDetails = (tmdbId: number, seasonNumber: number) => {
+    return api.get(`/media/metadata/tmdb/${tmdbId}/season/${seasonNumber}`);
+};
+
 export default api;
 

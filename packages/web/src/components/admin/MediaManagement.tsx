@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Trash2, Edit2, Plus, Film, Image as ImageIcon, Subtitles as SubtitlesIcon, X, DownloadCloud, Link as LinkIcon } from 'lucide-react';
+import { Upload, Trash2, Edit2, Plus, Film, Image as ImageIcon, Subtitles as SubtitlesIcon, X, DownloadCloud, Link as LinkIcon, Layers } from 'lucide-react';
 import { useUploadQueue } from '../../context/UploadQueueContext';
-import api, { getMedia, updateMedia, deleteMedia, getSubtitles, uploadSubtitle, deleteSubtitle, searchMetadata } from '../../services/api';
+import api, { getMedia, updateMedia, deleteMedia, getSubtitles, uploadSubtitle, deleteSubtitle, searchMetadata, getEpisodes, addEpisode, deleteEpisode, getTMDBSeasonDetails } from '../../services/api';
 
 interface Media {
     id: string;
@@ -15,6 +15,7 @@ interface Media {
     backdropUrl?: string;
     filePath?: string;
     genres?: string[];
+    tmdbId?: string;
 }
 
 interface Subtitle {
@@ -34,6 +35,15 @@ const MediaManagement = () => {
     const [showEditModal, setShowEditModal] = useState(false);
     const [showSubtitleModal, setShowSubtitleModal] = useState(false);
     const [showImportModal, setShowImportModal] = useState(false);
+    const [showEpisodeModal, setShowEpisodeModal] = useState(false);
+    
+    // Episode Management State
+    const [episodeList, setEpisodeList] = useState<Record<string, Array<{ id: string; title: string; episodeNumber: number; seasonNumber: number; filePath?: string }>>>({});
+    const [episodeForm, setEpisodeForm] = useState({ seasonNumber: '1', episodeNumber: '1', title: '', overview: '', videoUrl: '' });
+    const [episodeFile, setEpisodeFile] = useState<File | null>(null);
+    const [tmdbSeasons, setTmdbSeasons] = useState<Array<{ season_number: number; name: string; episode_count: number }>>([]);
+    const [tmdbEpisodeList, setTmdbEpisodeList] = useState<Array<{ episodeNumber: number; name: string; overview: string; stillPath?: string }>>([]);
+    const [isLoadingEpisodes, setIsLoadingEpisodes] = useState(false);
     
     // Upload Method State
     const [uploadMethod, setUploadMethod] = useState<'file' | 'link'>('file');
@@ -42,7 +52,7 @@ const MediaManagement = () => {
     
     // Import Modal State
     const [importQuery, setImportQuery] = useState('');
-    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [searchResults, setSearchResults] = useState<Array<{ id: number; title?: string; name?: string; release_date?: string; first_air_date?: string; poster_path?: string; media_type?: string }>>([]);
     const [isSearching, setIsSearching] = useState(false);
     
     // Upload Queue
@@ -328,6 +338,111 @@ const MediaManagement = () => {
         setShowSubtitleModal(true);
     };
 
+    const openEpisodeModal = async (media: Media) => {
+        setSelectedMedia(media);
+        setIsLoadingEpisodes(true);
+        setEpisodeForm({ seasonNumber: '1', episodeNumber: '1', title: '', overview: '', videoUrl: '' });
+        setEpisodeFile(null);
+        
+        try {
+            // Load existing episodes
+            const epRes = await getEpisodes(media.id);
+            setEpisodeList(epRes.data);
+
+            // Load TMDB seasons if tmdbId exists
+            if (media.tmdbId) {
+                const tmdbRes = await api.get(`/media/metadata/tmdb/${media.tmdbId}?type=tv`);
+                if (tmdbRes.data?.seasons) {
+                    setTmdbSeasons(tmdbRes.data.seasons.filter((s: { season_number: number }) => s.season_number > 0));
+                }
+            }
+        } catch (err) {
+            console.error('Failed to load episode data', err);
+        }
+        
+        setIsLoadingEpisodes(false);
+        setShowEpisodeModal(true);
+    };
+
+    const handleSeasonChange = async (seasonNum: string) => {
+        setEpisodeForm({ ...episodeForm, seasonNumber: seasonNum, episodeNumber: '1' });
+        setTmdbEpisodeList([]);
+        
+        if (selectedMedia?.tmdbId && seasonNum) {
+            try {
+                const res = await getTMDBSeasonDetails(parseInt(selectedMedia.tmdbId), parseInt(seasonNum));
+                if (res.data?.episodes) {
+                    setTmdbEpisodeList(res.data.episodes);
+                }
+            } catch (err) {
+                console.error('Failed to load season episodes', err);
+            }
+        }
+    };
+
+    const handleEpisodeSelect = (epNum: string) => {
+        const ep = tmdbEpisodeList.find(e => e.episodeNumber === parseInt(epNum));
+        if (ep) {
+            setEpisodeForm({
+                ...episodeForm,
+                episodeNumber: epNum,
+                title: ep.name,
+                overview: ep.overview || ''
+            });
+        } else {
+            setEpisodeForm({ ...episodeForm, episodeNumber: epNum });
+        }
+    };
+
+    const handleEpisodeUpload = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedMedia) return;
+
+        try {
+            const formDataToSend = new FormData();
+            formDataToSend.append('seasonNumber', episodeForm.seasonNumber);
+            formDataToSend.append('episodeNumber', episodeForm.episodeNumber);
+            formDataToSend.append('title', episodeForm.title);
+            formDataToSend.append('overview', episodeForm.overview);
+            
+            if (episodeFile) {
+                formDataToSend.append('videoFile', episodeFile);
+            } else if (episodeForm.videoUrl) {
+                formDataToSend.append('videoUrl', episodeForm.videoUrl);
+            }
+
+            await addEpisode(selectedMedia.id, formDataToSend);
+            
+            // Refresh episodes list
+            const epRes = await getEpisodes(selectedMedia.id);
+            setEpisodeList(epRes.data);
+            
+            // Reset form
+            setEpisodeFile(null);
+            setEpisodeForm({ ...episodeForm, title: '', overview: '', videoUrl: '' });
+            
+            alert(t('admin.episodeAdded'));
+        } catch (err) {
+            console.error('Failed to add episode', err);
+            alert(t('admin.episodeAddFailed'));
+        }
+    };
+
+    const handleEpisodeDelete = async (episodeId: string) => {
+        if (!confirm(t('admin.episodeDeleteConfirm'))) return;
+        
+        try {
+            await deleteEpisode(episodeId);
+            // Refresh
+            if (selectedMedia) {
+                const epRes = await getEpisodes(selectedMedia.id);
+                setEpisodeList(epRes.data);
+            }
+        } catch (err) {
+            console.error('Failed to delete episode', err);
+        }
+    };
+
     const handleSubtitleUpload = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedMedia || !subtitleFile) return;
@@ -423,6 +538,15 @@ const MediaManagement = () => {
                                     >
                                         <Edit2 size={18} />
                                     </button>
+                                    {(media.type === 'series' || media.type === 'tv') && (
+                                        <button
+                                            onClick={() => openEpisodeModal(media)}
+                                            className="p-2 bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
+                                            title={t('admin.manageEpisodes')}
+                                        >
+                                            <Layers size={18} />
+                                        </button>
+                                    )}
                                     <button
                                         onClick={() => openSubtitleModal(media)}
                                         className="p-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
@@ -776,6 +900,131 @@ const MediaManagement = () => {
                                                 >
                                                     <Trash2 size={16} />
                                                 </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </Modal>
+                )}
+            </AnimatePresence>
+
+            {/* Episode Modal */}
+            <AnimatePresence>
+                {showEpisodeModal && selectedMedia && (
+                    <Modal onClose={() => setShowEpisodeModal(false)} title={`${t('admin.manageEpisodes')} - ${selectedMedia.title}`}>
+                        <div className="space-y-6">
+                            {/* Add Episode Form */}
+                            <form onSubmit={handleEpisodeUpload} className="space-y-4 pb-4 border-b border-white/10">
+                                <h3 className="font-semibold">{t('admin.addEpisode')}</h3>
+                                
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-sm font-medium text-white/60 mb-1">{t('admin.seasonNumber')}</label>
+                                        <select
+                                            value={episodeForm.seasonNumber}
+                                            onChange={e => handleSeasonChange(e.target.value)}
+                                            className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 focus:border-primary-500 outline-none text-white"
+                                        >
+                                            {tmdbSeasons.length > 0 ? (
+                                                tmdbSeasons.map(s => (
+                                                    <option key={s.season_number} value={s.season_number} className="bg-surface">{s.name}</option>
+                                                ))
+                                            ) : (
+                                                Array.from({ length: 10 }, (_, i) => (
+                                                    <option key={i + 1} value={i + 1} className="bg-surface">{t('admin.seasonNumber')} {i + 1}</option>
+                                                ))
+                                            )}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-white/60 mb-1">{t('admin.episodeNumber')}</label>
+                                        <select
+                                            value={episodeForm.episodeNumber}
+                                            onChange={e => handleEpisodeSelect(e.target.value)}
+                                            className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 focus:border-primary-500 outline-none text-white"
+                                        >
+                                            {tmdbEpisodeList.length > 0 ? (
+                                                tmdbEpisodeList.map(ep => (
+                                                    <option key={ep.episodeNumber} value={ep.episodeNumber} className="bg-surface">{ep.episodeNumber}. {ep.name}</option>
+                                                ))
+                                            ) : (
+                                                Array.from({ length: 24 }, (_, i) => (
+                                                    <option key={i + 1} value={i + 1} className="bg-surface">{t('admin.episodeNumber')} {i + 1}</option>
+                                                ))
+                                            )}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-white/60 mb-1">{t('admin.episodeTitle')}</label>
+                                    <input
+                                        type="text"
+                                        value={episodeForm.title}
+                                        onChange={e => setEpisodeForm({ ...episodeForm, title: e.target.value })}
+                                        className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 focus:border-primary-500 outline-none"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-white/60 mb-1">{t('admin.videoLink')}</label>
+                                    <input
+                                        type="url"
+                                        value={episodeForm.videoUrl}
+                                        onChange={e => setEpisodeForm({ ...episodeForm, videoUrl: e.target.value })}
+                                        className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 focus:border-primary-500 outline-none"
+                                        placeholder="https://..."
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-white/60 mb-1">{t('admin.videoFile')}</label>
+                                    <input
+                                        type="file"
+                                        accept="video/*"
+                                        onChange={e => setEpisodeFile(e.target.files?.[0] || null)}
+                                        className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 focus:border-primary-500 outline-none"
+                                    />
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={isLoadingEpisodes}
+                                    className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <Plus size={18} />
+                                    {t('admin.addEpisode')}
+                                </button>
+                            </form>
+
+                            {/* Episode List */}
+                            <div>
+                                <h3 className="font-semibold mb-3">{t('admin.existingEpisodes')}</h3>
+                                {Object.keys(episodeList).length === 0 ? (
+                                    <p className="text-white/40 text-sm text-center py-4">{t('admin.noEpisodes')}</p>
+                                ) : (
+                                    <div className="space-y-4 max-h-64 overflow-y-auto">
+                                        {Object.entries(episodeList).sort((a, b) => parseInt(a[0]) - parseInt(b[0])).map(([season, eps]) => (
+                                            <div key={season}>
+                                                <h4 className="text-sm font-medium text-white/60 mb-2">{t('admin.seasonNumber')} {season}</h4>
+                                                <div className="space-y-2">
+                                                    {eps.sort((a, b) => a.episodeNumber - b.episodeNumber).map(ep => (
+                                                        <div key={ep.id} className="flex items-center justify-between bg-black/30 rounded-lg px-4 py-3 border border-white/10">
+                                                            <div>
+                                                                <div className="font-medium">{ep.episodeNumber}. {ep.title}</div>
+                                                                <div className="text-sm text-white/40">{ep.filePath ? '✓ Video mevcut' : '⚠ Video yok'}</div>
+                                                            </div>
+                                                            <button
+                                                                onClick={() => handleEpisodeDelete(ep.id)}
+                                                                className="p-2 hover:bg-red-600/20 text-red-400 rounded-lg transition-colors"
+                                                            >
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
