@@ -263,4 +263,38 @@ export class MediaController {
     ) {
         return this.mediaService.deleteSubtitle(subtitleId);
     }
+
+    // Episode Management
+    @Post(':id/episodes')
+    @ApiOperation({ summary: 'Upload episode for a series' })
+    @Roles(UserRole.ADMIN)
+    @UseGuards(RolesGuard)
+    @UseInterceptors(FileFieldsInterceptor([
+        { name: 'videoFile', maxCount: 1 },
+        { name: 'stillImage', maxCount: 1 },
+    ], { storage }))
+    async createEpisode(
+        @Param('id') mediaId: string,
+        @UploadedFiles() files: {
+            videoFile?: Express.Multer.File[];
+            stillImage?: Express.Multer.File[];
+        },
+        @Body() body: any,
+    ) {
+        return this.mediaService.createEpisode(mediaId, files, body);
+    }
+
+    @Get(':id/episodes')
+    @ApiOperation({ summary: 'Get all episodes for a series' })
+    async getEpisodes(@Param('id') mediaId: string) {
+        return this.mediaService.getEpisodesByMedia(mediaId);
+    }
+
+    @Delete('episodes/:episodeId')
+    @ApiOperation({ summary: 'Delete an episode' })
+    @Roles(UserRole.ADMIN)
+    @UseGuards(RolesGuard)
+    async deleteEpisode(@Param('episodeId') episodeId: string) {
+        return this.mediaService.deleteEpisode(episodeId);
+    }
 }

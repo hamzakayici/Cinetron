@@ -454,4 +454,73 @@ export class MediaService implements OnModuleInit {
         // TODO: Delete file from filesystem
         return this.subtitleRepository.delete(subtitleId);
     }
+
+    // Episode Management
+    async createEpisode(mediaId: string, files: any, dto: any) {
+        const media = await this.mediaRepository.findOne({ where: { id: mediaId } });
+        if (!media) {
+            throw new Error('Media not found');
+        }
+
+        const episode = this.episodeRepository.create({
+            title: dto.title,
+            seasonNumber: parseInt(dto.seasonNumber),
+            episodeNumber: parseInt(dto.episodeNumber),
+            overview: dto.overview || '',
+            mediaId: mediaId,
+        });
+
+        // Handle video file upload
+        if (files.videoFile && files.videoFile[0]) {
+            episode.filePath = `/files/uploads/videos/${files.videoFile[0].filename}`;
+        } else if (dto.videoUrl) {
+            episode.filePath = dto.videoUrl;
+        }
+
+        // Handle still image (episode thumbnail)
+        if (files.stillImage && files.stillImage[0]) {
+            episode.stillUrl = `/files/uploads/images/${files.stillImage[0].filename}`;
+        } else if (dto.stillUrl) {
+            episode.stillUrl = dto.stillUrl;
+        }
+
+        return this.episodeRepository.save(episode);
+    }
+
+    async getEpisodesByMedia(mediaId: string) {
+        const episodes = await this.episodeRepository.find({
+            where: { mediaId },
+            order: { seasonNumber: 'ASC', episodeNumber: 'ASC' }
+        });
+
+        // Group by season
+        const grouped = episodes.reduce((acc, episode) => {
+            const season = `Season ${episode.seasonNumber}`;
+            if (!acc[season]) {
+                acc[season] = [];
+            }
+            acc[season].push(episode);
+            return acc;
+        }, {});
+
+        return grouped;
+    }
+
+    async deleteEpisode(episodeId: string) {
+        const episode = await this.episodeRepository.findOne({ where: { id: episodeId } });
+        if (!episode) {
+            throw new Error('Episode not found');
+        }
+
+        // Delete physical video file if exists
+        if (episode.filePath && episode.filePath.startsWith('/files/')) {
+            const filePath = episode.filePath.replace('/files/', './public/');
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+        }
+
+        await this.episodeRepository.remove(episode);
+        return { message: 'Episode deleted successfully' };
+    }
 }
