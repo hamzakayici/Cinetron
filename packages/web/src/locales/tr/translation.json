@@ -47,18 +47,20 @@
         "exploreAll": "Tümünü Gör"
     },
     "player": {
-        "resumeTitle": "İzlemeye Devam Et?",
-        "resumeMessage": "Kaldığınız yer: {{time}}",
+        "resumeTitle": "Kaldığınız Yerden Devam Edin",
+        "resumeMessage": "{{time}} dakikada kaldınız",
         "resume": "Devam Et",
         "startOver": "Baştan Başla",
-        "subtitles": "Altyazılar",
-        "off": "Kapalı",
-        "noSubtitles": "Altyazı bulunamadı",
+        "playbackSpeed": "Oynatma Hızı",
+        "pip": "Resim İçinde Resim",
+        "fullscreen": "Tam Ekran",
+        "watchOnYouTube": "YouTube'da İzle",
+        "mediaNotFound": "İçerik bulunamadı",
         "speed": "Hız",
         "settings": "Ayarlar",
-        "pip": "Pencere İçinde Pencere",
-        "fullscreen": "Tam Ekran",
-        "mediaNotFound": "Medya bulunamadı"
+        "subtitles": "Altyazılar",
+        "off": "Kapalı",
+        "noSubtitles": "Altyazı bulunamadı"
     },
     "detail": {
         "loading": "Yükleniyor...",

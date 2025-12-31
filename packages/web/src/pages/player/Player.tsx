@@ -278,7 +278,7 @@ const Player = () => {
 
             {/* YouTube Player */}
             {isYouTubeUrl(media.playbackUrl || '') ? (
-                <div className="h-full w-full flex items-center justify-center">
+                <div className="h-full w-full flex flex-col items-center justify-center relative">
                     <iframe
                         src={`https://www.youtube.com/embed/${getYouTubeVideoId(media.playbackUrl || '')}?autoplay=1&rel=0&modestbranding=1`}
                         className="w-full h-full"
@@ -287,6 +287,20 @@ const Player = () => {
                         allowFullScreen
                         title={media.title}
                     />
+                    {/* Fallback for restricted videos */}
+                    <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2">
+                        <a
+                            href={media.playbackUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium flex items-center gap-2 transition-colors shadow-lg"
+                        >
+                            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+                            </svg>
+                            {t('player.watchOnYouTube')}
+                        </a>
+                    </div>
                 </div>
             ) : (
                 /* Standard Video Player */
