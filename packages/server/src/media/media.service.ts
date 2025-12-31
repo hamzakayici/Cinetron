@@ -33,7 +33,7 @@ export class MediaService implements OnModuleInit {
 
     async onModuleInit() {
         this.logger.log('MediaService initialized');
-        await this.seedMockData();
+        // Seed data disabled - system starts empty
     }
 
     async findAll(): Promise<Media[]> {
