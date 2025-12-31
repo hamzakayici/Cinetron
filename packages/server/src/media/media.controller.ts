@@ -276,8 +276,9 @@ export class MediaController {
     // Episode Management
     @Post(':id/episodes')
     @ApiOperation({ summary: 'Upload episode for a series' })
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
     @Roles(UserRole.ADMIN)
-    @UseGuards(RolesGuard)
     @UseInterceptors(FileFieldsInterceptor([
         { name: 'videoFile', maxCount: 1 },
         { name: 'stillImage', maxCount: 1 },
@@ -301,8 +302,9 @@ export class MediaController {
 
     @Delete('episodes/:episodeId')
     @ApiOperation({ summary: 'Delete an episode' })
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
     @Roles(UserRole.ADMIN)
-    @UseGuards(RolesGuard)
     async deleteEpisode(@Param('episodeId') episodeId: string) {
         return this.mediaService.deleteEpisode(episodeId);
     }
