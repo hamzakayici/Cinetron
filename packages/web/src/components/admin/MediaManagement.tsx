@@ -343,8 +343,8 @@ const MediaManagement = () => {
 
     const openEpisodeModal = async (media: Media) => {
         setSelectedMedia(media);
+        setEpisodeForm({ seasonNumber: '1', episodeNumber: '1', title: '', overview: '', videoUrl: '', stillUrl: '' });
         setIsLoadingEpisodes(true);
-        setEpisodeForm({ seasonNumber: '1', episodeNumber: '1', title: '', overview: '', videoUrl: '' });
         setEpisodeFile(null);
         
         try {
