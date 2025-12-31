@@ -311,7 +311,10 @@ const MediaManagement = () => {
             backdropUrl: media.backdropUrl || '',
             tmdbId: '',
             videoUrl: media.filePath?.startsWith('http') ? media.filePath : '',
-            genres: media.genres ? media.genres.join(', ') : ''
+            genres: media.genres ? media.genres.join(', ') : '',
+            cast: '',
+            director: '',
+            runtime: ''
         });
         setShowEditModal(true);
     };
